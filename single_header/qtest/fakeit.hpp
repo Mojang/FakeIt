@@ -2,7 +2,7 @@
 /*
  *  FakeIt - A Simplified C++ Mocking Framework
  *  Copyright (c) Eran Pe'er 2013
- *  Generated: 2017-10-28 14:16:25.648560
+ *  Generated: 2018-06-26 18:57:21.353307
  *  Distributed under the MIT License. Please refer to the LICENSE file at:
  *  https://github.com/eranpeer/FakeIt
  */
@@ -873,6 +873,17 @@ namespace fakeit {
             return out.str();
         }
 
+        static std::string formatExpectedPattern(const std::vector<fakeit::Sequence *> &expectedPattern) {
+            std::string expectedPatternStr;
+            for (unsigned int i = 0; i < expectedPattern.size(); i++) {
+                Sequence *s = expectedPattern[i];
+                expectedPatternStr += formatSequence(*s);
+                if (i < expectedPattern.size() - 1)
+                    expectedPatternStr += " ... ";
+            }
+            return expectedPatternStr;
+        }
+
     private:
 
         static std::string formatSequence(const Sequence &val) {
@@ -937,17 +948,6 @@ namespace fakeit {
 
             out << " * " << val.getTimes();
             return out.str();
-        }
-
-        static std::string formatExpectedPattern(const std::vector<fakeit::Sequence *> &expectedPattern) {
-            std::string expectedPatternStr;
-            for (unsigned int i = 0; i < expectedPattern.size(); i++) {
-                Sequence *s = expectedPattern[i];
-                expectedPatternStr += formatSequence(*s);
-                if (i < expectedPattern.size() - 1)
-                    expectedPatternStr += " ... ";
-            }
-            return expectedPatternStr;
         }
     };
 }
@@ -5841,6 +5841,10 @@ namespace fakeit {
                 std::vector<std::shared_ptr<Destructible>> &methodMocks,
                 std::vector<unsigned int> &offsets) :
                 _methodMocks(methodMocks), _offsets(offsets) {
+			for (std::vector<unsigned int>::iterator it = _offsets.begin(); it != _offsets.end(); ++it)
+			{
+				*it = INT_MAX;
+			}
         }
 
         Destructible *getInvocatoinHandlerPtrById(unsigned int id) override {
@@ -8770,7 +8774,7 @@ namespace fakeit {
 
         ~SequenceVerificationProgress() THROWS { };
 
-        operator bool() {
+        operator bool() const {
             return Terminator(_expectationPtr);
         }
 
@@ -9025,8 +9029,8 @@ namespace fakeit {
             return *this;
         }
 
-        operator bool() {
-            return toBool();
+        operator bool() const {
+            return const_cast<VerifyNoOtherInvocationsVerificationProgress *>(this)->toBool();
         }
 
         bool operator!() const { return !const_cast<VerifyNoOtherInvocationsVerificationProgress *>(this)->toBool(); }

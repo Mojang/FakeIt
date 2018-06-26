@@ -2,7 +2,7 @@
 /*
  *  FakeIt - A Simplified C++ Mocking Framework
  *  Copyright (c) Eran Pe'er 2013
- *  Generated: 2017-11-05 20:30:40.182814
+ *  Generated: 2018-06-26 18:57:07.158580
  *  Distributed under the MIT License. Please refer to the LICENSE file at:
  *  https://github.com/eranpeer/FakeIt
  */
@@ -5935,6 +5935,10 @@ namespace fakeit {
                 std::vector<std::shared_ptr<Destructible>> &methodMocks,
                 std::vector<unsigned int> &offsets) :
                 _methodMocks(methodMocks), _offsets(offsets) {
+			for (std::vector<unsigned int>::iterator it = _offsets.begin(); it != _offsets.end(); ++it)
+			{
+				*it = INT_MAX;
+			}
         }
 
         Destructible *getInvocatoinHandlerPtrById(unsigned int id) override {
@@ -8850,7 +8854,7 @@ namespace fakeit {
 
         ~SequenceVerificationProgress() THROWS { };
 
-        operator bool() {
+        operator bool() const {
             return Terminator(_expectationPtr);
         }
 
@@ -9105,8 +9109,8 @@ namespace fakeit {
             return *this;
         }
 
-        operator bool() {
-            return toBool();
+        operator bool() const {
+            return const_cast<VerifyNoOtherInvocationsVerificationProgress *>(this)->toBool();
         }
 
         bool operator!() const { return !const_cast<VerifyNoOtherInvocationsVerificationProgress *>(this)->toBool(); }
