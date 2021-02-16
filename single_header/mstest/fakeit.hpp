@@ -1073,9 +1073,8 @@ namespace fakeit {
 
     };
 }
-#include <CppUnitTestAssert.h>
-
-using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+//#include <CppUnitTestAssert.h>
+//using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace fakeit {
 
@@ -1090,7 +1089,7 @@ namespace fakeit {
 		{
 			auto formattedMessage = _formatter.format(e);
 			std::wstring wFormattedMessage = to_wstring(formattedMessage);
-			Assert::Fail(wFormattedMessage.c_str());
+			//Assert::Fail(wFormattedMessage.c_str());
 		}
 
 		virtual void handle(const SequenceVerificationEvent& e) override
@@ -1100,7 +1099,7 @@ namespace fakeit {
 
 
 
-			Assert::Fail(wFormattedMessage.c_str());
+			//Assert::Fail(wFormattedMessage.c_str());
 		}
 
 		virtual void handle(const NoMoreInvocationsVerificationEvent& e) override
@@ -1110,7 +1109,7 @@ namespace fakeit {
 
 
 
-			Assert::Fail(wFormattedMessage.c_str());
+			//Assert::Fail(wFormattedMessage.c_str());
 		}
 
 
