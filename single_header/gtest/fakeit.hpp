@@ -2,7 +2,7 @@
 /*
  *  FakeIt - A Simplified C++ Mocking Framework
  *  Copyright (c) Eran Pe'er 2013
- *  Generated: 2018-06-26 18:57:11.532656
+ *  Generated: 2021-10-01 16:04:12.631228
  *  Distributed under the MIT License. Please refer to the LICENSE file at:
  *  https://github.com/eranpeer/FakeIt
  */
@@ -921,7 +921,8 @@ namespace fakeit {
             for (unsigned int i = 0; i < max_size; i++) {
                 out << "  ";
                 auto invocation = actualSequence[i];
-                out << invocation->format();
+
+                out << invocation->getMethod().name();
                 if (i < max_size - 1)
                     out << std::endl;
             }
