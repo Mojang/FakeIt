@@ -116,7 +116,8 @@ namespace fakeit {
             for (unsigned int i = 0; i < max_size; i++) {
                 out << "  ";
                 auto invocation = actualSequence[i];
-                out << invocation->format();
+                // Sometimes the object is not successfully dynamic casted which means format() would crash. So we just print the method name instead.
+                out << invocation->getMethod().name();
                 if (i < max_size - 1)
                     out << std::endl;
             }
