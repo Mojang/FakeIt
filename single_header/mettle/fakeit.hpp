@@ -2,7 +2,7 @@
 /*
  *  FakeIt - A Simplified C++ Mocking Framework
  *  Copyright (c) Eran Pe'er 2013
- *  Generated: 2021-10-01 16:04:17.649742
+ *  Generated: 2022-05-04 10:53:05.001900
  *  Distributed under the MIT License. Please refer to the LICENSE file at:
  *  https://github.com/eranpeer/FakeIt
  */
@@ -9191,10 +9191,10 @@ namespace fakeit {
     std::remove_reference<decltype(mock.get())>::type
 
 #define OVERLOADED_METHOD_PTR(mock, method, prototype) \
-    fakeit::Prototype<prototype>::MemberType<MOCK_TYPE(mock)>::get(&MOCK_TYPE(mock)::method)
+    fakeit::Prototype<prototype>::MemberType<typename MOCK_TYPE(mock)>::get(&MOCK_TYPE(mock)::method)
 
 #define CONST_OVERLOADED_METHOD_PTR(mock, method, prototype) \
-    fakeit::Prototype<prototype>::MemberType<MOCK_TYPE(mock)>::getconst(&MOCK_TYPE(mock)::method)
+    fakeit::Prototype<prototype>::MemberType<typename MOCK_TYPE(mock)>::getconst(&MOCK_TYPE(mock)::method)
 
 #define Dtor(mock) \
     mock.dtor().setMethodDetails(#mock,"destructor")
