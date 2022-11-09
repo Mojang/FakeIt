@@ -2,7 +2,7 @@
 /*
  *  FakeIt - A Simplified C++ Mocking Framework
  *  Copyright (c) Eran Pe'er 2013
- *  Generated: 2023-02-24 15:54:13.613583
+ *  Generated: 2023-03-09 16:30:08.395009
  *  Distributed under the MIT License. Please refer to the LICENSE file at:
  *  https://github.com/eranpeer/FakeIt
  */
@@ -5322,7 +5322,7 @@ namespace fakeit {
 		}
 
         template<typename C>
-        static unsigned int getVTSize() {
+        static size_t getVTSize() {
             struct Derrived : public C {
                 virtual void endOfVt() {
                 }
@@ -5514,7 +5514,7 @@ namespace fakeit {
         }
 
         void copyFrom(VirtualTable<C, baseclasses...> &from) {
-            unsigned int size = VTUtils::getVTSize<C>();
+            auto size = VTUtils::getVTSize<C>();
             for (unsigned int i = 0; i < size; i++) {
                 _firstMethod[i] = from.getMethod(i);
             }
@@ -5560,7 +5560,7 @@ namespace fakeit {
             setCookie(dtorCookieIndex, method);
         }
 
-        unsigned int getSize() {
+        size_t getSize() {
             return VTUtils::getVTSize<C>();
         }
 
@@ -5587,7 +5587,7 @@ namespace fakeit {
         static const unsigned int dtorCookieIndex = numOfCookies - 1;
 
         static void **buildVTArray() {
-            int vtSize = VTUtils::getVTSize<C>();
+            auto vtSize = VTUtils::getVTSize<C>();
             auto array = new void *[vtSize + numOfCookies + 1]{};
             RTTICompleteObjectLocator<C, baseclasses...> *objectLocator = new RTTICompleteObjectLocator<C, baseclasses...>(
                     typeid(C));
@@ -5862,7 +5862,7 @@ namespace fakeit {
 
     struct MethodProxy {
 
-        MethodProxy(unsigned int id, unsigned int offset, void *vMethod) :
+        MethodProxy(size_t id, unsigned int offset, void *vMethod) :
                 _id(id),
                 _offset(offset),
                 _vMethod(vMethod) {
@@ -5872,7 +5872,7 @@ namespace fakeit {
             return _offset;
         }
 
-        unsigned int getId() const {
+        size_t getId() const {
             return _id;
         }
 
@@ -5881,7 +5881,7 @@ namespace fakeit {
         }
 
     private:
-        unsigned int _id;
+        size_t _id;
         unsigned int _offset;
         void *_vMethod;
     };
@@ -5894,7 +5894,7 @@ namespace fakeit {
     struct InvocationHandlerCollection {
         static const unsigned int VtCookieIndex = 0;
 
-        virtual Destructible *getInvocatoinHandlerPtrById(unsigned int index) = 0;
+        virtual Destructible *getInvocatoinHandlerPtrById(size_t index) = 0;
 
         static InvocationHandlerCollection *getInvocationHandlerCollection(void *instance) {
             VirtualTableBase &vt = VirtualTableBase::getVTable(instance);
@@ -5912,14 +5912,14 @@ namespace fakeit {
 
     public:
 
-        template<unsigned int id>
+        template<size_t id>
         MethodProxy createMethodProxy(unsigned int offset) {
             return MethodProxy(id, offset, union_cast<void *>(&MethodProxyCreator::methodProxyX < id > ));
         }
 
     protected:
 
-        R methodProxy(unsigned int id, const typename fakeit::production_arg<arglist>::type... args) {
+        R methodProxy(size_t id, const typename fakeit::production_arg<arglist>::type... args) {
             InvocationHandlerCollection *invocationHandlerCollection = InvocationHandlerCollection::getInvocationHandlerCollection(
                     this);
             MethodInvocationHandler<R, arglist...> *invocationHandler =
@@ -5928,7 +5928,7 @@ namespace fakeit {
             return invocationHandler->handleMethodInvocation(std::forward<const typename fakeit::production_arg<arglist>::type>(args)...);
         }
 
-        template<int id>
+        template<size_t id>
         R methodProxyX(arglist ... args) {
             return methodProxy(id, std::forward<const typename fakeit::production_arg<arglist>::type>(args)...);
         }
@@ -5939,9 +5939,9 @@ namespace fakeit {
 
     class InvocationHandlers : public InvocationHandlerCollection {
         std::vector<std::shared_ptr<Destructible>> &_methodMocks;
-        std::vector<unsigned int> &_offsets;
+        std::vector<size_t> &_offsets;
 
-        unsigned int getOffset(unsigned int id) const
+        unsigned int getOffset(size_t id) const
         {
             unsigned int offset = 0;
             for (; offset < _offsets.size(); offset++) {
@@ -5955,15 +5955,15 @@ namespace fakeit {
     public:
         InvocationHandlers(
                 std::vector<std::shared_ptr<Destructible>> &methodMocks,
-                std::vector<unsigned int> &offsets) :
+                std::vector<size_t> &offsets) :
                 _methodMocks(methodMocks), _offsets(offsets) {
-			for (std::vector<unsigned int>::iterator it = _offsets.begin(); it != _offsets.end(); ++it)
+			for (auto it = _offsets.begin(); it != _offsets.end(); ++it)
 			{
 				*it = std::numeric_limits<int>::max();
 			}
         }
 
-        Destructible *getInvocatoinHandlerPtrById(unsigned int id) override {
+        Destructible *getInvocatoinHandlerPtrById(size_t id) override {
             unsigned int offset = getOffset(id);
             std::shared_ptr<Destructible> ptr = _methodMocks[offset];
             return ptr.get();
@@ -6012,7 +6012,7 @@ namespace fakeit {
         {
         }
 
-        template<int id, typename R, typename ... arglist>
+        template<size_t id, typename R, typename ... arglist>
         void stubMethod(R(C::*vMethod)(arglist...), MethodInvocationHandler<R, arglist...> *methodInvocationHandler) {
             auto offset = VTUtils::getOffset(vMethod);
             MethodProxyCreator<R, arglist...> creator;
@@ -6101,7 +6101,7 @@ namespace fakeit {
 
         std::vector<std::shared_ptr<Destructible>> _methodMocks;
         std::vector<std::shared_ptr<Destructible>> _members;
-        std::vector<unsigned int> _offsets;
+        std::vector<size_t> _offsets;
         InvocationHandlers _invocationHandlers;
 
         FakeObject<C, baseclasses...> &getFake() {
@@ -8565,7 +8565,7 @@ namespace fakeit {
             return DataMemberStubbingRoot<T, DataType>();
         }
 
-        template<int id, typename R, typename T, typename ... arglist, class = typename std::enable_if<std::is_base_of<T, C>::value>::type>
+        template<size_t id, typename R, typename T, typename ... arglist, class = typename std::enable_if<std::is_base_of<T, C>::value>::type>
         MockingContext<R, arglist...> stubMethod(R(T::*vMethod)(arglist...)) {
             return MockingContext<R, arglist...>(new UniqueMethodMockingContextImpl < id, R, arglist... >
                    (*this, vMethod));
@@ -8688,7 +8688,7 @@ namespace fakeit {
         };
 
 
-        template<int id, typename R, typename ... arglist>
+        template<size_t id, typename R, typename ... arglist>
         class UniqueMethodMockingContextImpl : public MethodMockingContextImpl<R, arglist...> {
         protected:
 
@@ -8790,7 +8790,7 @@ namespace fakeit {
             return origMethodPtr;
         }
 
-        template<unsigned int id, typename R, typename ... arglist>
+        template<size_t id, typename R, typename ... arglist>
         RecordedMethodBody<R, arglist...> &stubMethodIfNotStubbed(DynamicProxy<C, baseclasses...> &proxy,
                                                                   R (C::*vMethod)(arglist...)) {
             if (!proxy.isMethodStubbed(vMethod)) {
@@ -8914,55 +8914,55 @@ namespace fakeit {
             return impl.stubDataMember(member, ctorargs...);
         }
 
-        template<int id, typename R, typename T, typename ... arglist, class = typename std::enable_if<
+        template<size_t id, typename R, typename T, typename ... arglist, class = typename std::enable_if<
                 !std::is_void<R>::value && std::is_base_of<T, C>::value>::type>
         MockingContext<R, arglist...> stub(R (T::*vMethod)(arglist...) const) {
             auto methodWithoutConstVolatile = reinterpret_cast<R (T::*)(arglist...)>(vMethod);
             return impl.template stubMethod<id>(methodWithoutConstVolatile);
         }
 
-        template<int id, typename R, typename T, typename... arglist, class = typename std::enable_if<
+        template<size_t id, typename R, typename T, typename... arglist, class = typename std::enable_if<
                 !std::is_void<R>::value && std::is_base_of<T, C>::value>::type>
         MockingContext<R, arglist...> stub(R(T::*vMethod)(arglist...) volatile) {
             auto methodWithoutConstVolatile = reinterpret_cast<R(T::*)(arglist...)>(vMethod);
             return impl.template stubMethod<id>(methodWithoutConstVolatile);
         }
 
-        template<int id, typename R, typename T, typename... arglist, class = typename std::enable_if<
+        template<size_t id, typename R, typename T, typename... arglist, class = typename std::enable_if<
                 !std::is_void<R>::value && std::is_base_of<T, C>::value>::type>
         MockingContext<R, arglist...> stub(R(T::*vMethod)(arglist...) const volatile) {
             auto methodWithoutConstVolatile = reinterpret_cast<R(T::*)(arglist...)>(vMethod);
             return impl.template stubMethod<id>(methodWithoutConstVolatile);
         }
 
-        template<int id, typename R, typename T, typename... arglist, class = typename std::enable_if<
+        template<size_t id, typename R, typename T, typename... arglist, class = typename std::enable_if<
                 !std::is_void<R>::value && std::is_base_of<T, C>::value>::type>
         MockingContext<R, arglist...> stub(R(T::*vMethod)(arglist...)) {
             return impl.template stubMethod<id>(vMethod);
         }
 
-        template<int id, typename R, typename T, typename... arglist, class = typename std::enable_if<
+        template<size_t id, typename R, typename T, typename... arglist, class = typename std::enable_if<
                 std::is_void<R>::value && std::is_base_of<T, C>::value>::type>
         MockingContext<void, arglist...> stub(R(T::*vMethod)(arglist...) const) {
             auto methodWithoutConstVolatile = reinterpret_cast<void (T::*)(arglist...)>(vMethod);
             return impl.template stubMethod<id>(methodWithoutConstVolatile);
         }
 
-        template<int id, typename R, typename T, typename... arglist, class = typename std::enable_if<
+        template<size_t id, typename R, typename T, typename... arglist, class = typename std::enable_if<
                 std::is_void<R>::value && std::is_base_of<T, C>::value>::type>
         MockingContext<void, arglist...> stub(R(T::*vMethod)(arglist...) volatile) {
             auto methodWithoutConstVolatile = reinterpret_cast<void (T::*)(arglist...)>(vMethod);
             return impl.template stubMethod<id>(methodWithoutConstVolatile);
         }
 
-        template<int id, typename R, typename T, typename... arglist, class = typename std::enable_if<
+        template<size_t id, typename R, typename T, typename... arglist, class = typename std::enable_if<
                 std::is_void<R>::value && std::is_base_of<T, C>::value>::type>
         MockingContext<void, arglist...> stub(R(T::*vMethod)(arglist...) const volatile) {
             auto methodWithoutConstVolatile = reinterpret_cast<void (T::*)(arglist...)>(vMethod);
             return impl.template stubMethod<id>(methodWithoutConstVolatile);
         }
 
-        template<int id, typename R, typename T, typename... arglist, class = typename std::enable_if<
+        template<size_t id, typename R, typename T, typename... arglist, class = typename std::enable_if<
                 std::is_void<R>::value && std::is_base_of<T, C>::value>::type>
         MockingContext<void, arglist...> stub(R(T::*vMethod)(arglist...)) {
             auto methodWithoutConstVolatile = reinterpret_cast<void (T::*)(arglist...)>(vMethod);
@@ -9990,9 +9990,34 @@ namespace fakeit {
     };
 
 }
+
+namespace fakeit {
+
+    constexpr size_t _FNV_prime = sizeof(size_t) == 4 ? 16777619ULL : 1099511628211ULL;
+    constexpr size_t _FNV_offset_basis = sizeof(size_t) == 4 ? 2166136261ULL : 14695981039346656037ULL;
+
+    constexpr size_t _constExprHashImpl(const char* str, size_t count) {
+        return count ? (_constExprHashImpl(str, count - 1) ^ str[count - 1]) * _FNV_prime : _FNV_offset_basis;
+    }
+
+    template<size_t N>
+    constexpr size_t constExprHash(const char(&str)[N]) {
+        return _constExprHashImpl(str, N);
+    }
+
+}
+
 #ifdef _MSC_VER
 #define __func__ __FUNCTION__
 #endif
+
+#define COUNTER_STRINGIFY( counter ) #counter
+
+#define STUB_ID_STR( counter ) \
+    __FILE__ COUNTER_STRINGIFY(counter)
+
+#define STUB_ID(counter) \
+    fakeit::constExprHash(STUB_ID_STR(counter))
 
 #define MOCK_TYPE(mock) \
     std::remove_reference<decltype((mock).get())>::type
@@ -10007,13 +10032,13 @@ namespace fakeit {
     (mock).dtor().setMethodDetails(#mock,"destructor")
 
 #define Method(mock, method) \
-    (mock).template stub<__COUNTER__>(&MOCK_TYPE(mock)::method).setMethodDetails(#mock,#method)
+    (mock).template stub<STUB_ID(__COUNTER__)>(&MOCK_TYPE(mock)::method).setMethodDetails(#mock,#method)
 
 #define OverloadedMethod(mock, method, prototype) \
-    (mock).template stub<__COUNTER__>(OVERLOADED_METHOD_PTR( mock , method, prototype )).setMethodDetails(#mock,#method)
+    (mock).template stub<STUB_ID(__COUNTER__)>(OVERLOADED_METHOD_PTR( mock , method, prototype )).setMethodDetails(#mock,#method)
 
 #define ConstOverloadedMethod(mock, method, prototype) \
-    (mock).template stub<__COUNTER__>(CONST_OVERLOADED_METHOD_PTR( mock , method, prototype )).setMethodDetails(#mock,#method)
+    (mock).template stub<STUB_ID(__COUNTER__)>(CONST_OVERLOADED_METHOD_PTR( mock , method, prototype )).setMethodDetails(#mock,#method)
 
 #define Verify(...) \
         Verify( __VA_ARGS__ ).setFileInfo(__FILE__, __LINE__, __func__)
