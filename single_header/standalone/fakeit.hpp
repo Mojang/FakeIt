@@ -5857,6 +5857,7 @@ namespace fakeit {
         }
     };
 
+	constexpr int FREE_SLOT = -1;
 
     template<typename R, typename ... arglist>
     class MethodProxyCreator {
@@ -5864,10 +5865,41 @@ namespace fakeit {
 
 
     public:
+		// Slot refers to the slot into the mocked methods container
+		// The proxy is pointing at a free function that must somehow know about the slot corresponding to a mock
+		// There are a fixed number of free functions to do this, in methodProxyX below as instantiated by the index sequence
+		// The mock grabs a free slot, assigns the static value, then resets the slot when the mock is destroyed
+		// Since this is within a template based on function signature, it means that up to 100 methods of the same signature could
+		// be mocked at the same time before mocked functions would overlap. It also means that fakeit usage is not thread safe since
+		// it relies on assignment of this static value
 
-        template<unsigned int id>
-        MethodProxy createMethodProxy(unsigned int offset) {
-            return MethodProxy(id, offset, union_cast<void *>(&MethodProxyCreator::methodProxyX < id > ));
+		// The int is the slot into the mocked method table on the mock that is using this slot
+		static inline std::array<int, 100> methodproxyslot = std::invoke([] {
+			std::array<int, 100> result;
+			result.fill(FREE_SLOT);
+			return result;
+		});
+
+		template<size_t... I>
+		auto getMethodProxySlotFunction(size_t index, std::index_sequence<I...>) {
+			using SelfT = MethodProxyCreator<R, arglist...>;
+			std::array<decltype(&SelfT::methodProxyX<0>), sizeof...(I)> allFunctions = { &SelfT::methodProxyX<I>... };
+			// If this goes out of bounds then more than 100 functions of the same signature were mocked at the same time
+			return allFunctions[index];
+		}
+
+        std::pair<MethodProxy, int*> createMethodProxy(unsigned int offset, int id) {
+			size_t freeIndex = 0;
+			for (size_t i = 0; i < methodproxyslot.size(); ++i) {
+				if (methodproxyslot[i] == FREE_SLOT) {
+					freeIndex = i;
+					methodproxyslot[freeIndex] = id;
+					break;
+				}
+			}
+			// TODO: assert or something if there is no free slot
+			constexpr size_t slotCount = methodproxyslot.size();
+            return std::make_pair(MethodProxy(id, offset, union_cast<void *>(getMethodProxySlotFunction(freeIndex, std::make_index_sequence<slotCount>()))), &methodproxyslot[freeIndex]);
         }
 
     protected:
@@ -5881,9 +5913,9 @@ namespace fakeit {
             return invocationHandler->handleMethodInvocation(std::forward<const typename fakeit::production_arg<arglist>::type>(args)...);
         }
 
-        template<int id>
+		template<int Id>
         R methodProxyX(arglist ... args) {
-            return methodProxy(id, std::forward<const typename fakeit::production_arg<arglist>::type>(args)...);
+            return methodProxy(methodproxyslot[Id], std::forward<const typename fakeit::production_arg<arglist>::type>(args)...);
         }
     };
 }
@@ -5946,6 +5978,10 @@ namespace fakeit {
 
         ~DynamicProxy() {
             _cloneVt.dispose();
+			// Reset all slots that this proxy used
+			for (int*& slot : slotsToReset) {
+				*slot = FREE_SLOT;
+			}
         }
 
         C &get() {
@@ -5965,17 +6001,28 @@ namespace fakeit {
         {
         }
 
-        template<int id, typename R, typename ... arglist>
+
+        template<typename R, typename ... arglist>
         void stubMethod(R(C::*vMethod)(arglist...), MethodInvocationHandler<R, arglist...> *methodInvocationHandler) {
             auto offset = VTUtils::getOffset(vMethod);
             MethodProxyCreator<R, arglist...> creator;
-            bind(creator.template createMethodProxy<id + 1>(offset), methodInvocationHandler);
+			// Slot refers to the slot into the mocked methods container
+			// The proxy is pointing at a free function that must somehow know about the slot corresponding to this mock
+			// There are a fixed number of free functions to do this. Grab an open function and store that id to reset it later for future use
+			const int slot = currentSlot++;
+			auto&& [ proxy, takenSlot ] = creator.createMethodProxy(offset, slot);
+			slotsToReset.push_back(takenSlot);
+			*takenSlot = slot;
+            bind(proxy, methodInvocationHandler);
         }
 
         void stubDtor(MethodInvocationHandler<void> *methodInvocationHandler) {
             auto offset = VTUtils::getDestructorOffset<C>();
             MethodProxyCreator<void> creator;
-            bindDtor(creator.createMethodProxy<0>(offset), methodInvocationHandler);
+			auto&& [ proxy, takenSlot ] = creator.createMethodProxy(offset, 0);
+			slotsToReset.push_back(takenSlot);
+			*takenSlot = 0;
+            bindDtor(proxy, methodInvocationHandler);
         }
 
         template<typename R, typename ... arglist>
@@ -6056,6 +6103,9 @@ namespace fakeit {
         std::vector<std::shared_ptr<Destructible>> _members;
         std::vector<unsigned int> _offsets;
         InvocationHandlers _invocationHandlers;
+
+		int currentSlot = 1;
+		std::vector<int*> slotsToReset;
 
         FakeObject<C, baseclasses...> &getFake() {
             return reinterpret_cast<FakeObject<C, baseclasses...> &>(instance);
@@ -7943,9 +7993,9 @@ namespace fakeit {
             return DataMemberStubbingRoot<T, DATA_TYPE>();
         }
 
-        template<int id, typename R, typename T, typename ... arglist, class = typename std::enable_if<std::is_base_of<T, C>::value>::type>
+        template<typename R, typename T, typename ... arglist, class = typename std::enable_if<std::is_base_of<T, C>::value>::type>
         MockingContext<R, arglist...> stubMethod(R(T::*vMethod)(arglist...)) {
-            return MockingContext<R, arglist...>(new UniqueMethodMockingContextImpl < id, R, arglist... >
+            return MockingContext<R, arglist...>(new UniqueMethodMockingContextImpl <R, arglist... >
                    (*this, vMethod));
         }
 
@@ -8023,12 +8073,12 @@ namespace fakeit {
         };
 
 
-        template<int id, typename R, typename ... arglist>
+        template<typename R, typename ... arglist>
         class UniqueMethodMockingContextImpl : public MethodMockingContextImpl<R, arglist...> {
         protected:
 
             virtual RecordedMethodBody<R, arglist...> &getRecordedMethodBody() override {
-                return MethodMockingContextBase<R, arglist...>::_mock.template stubMethodIfNotStubbed<id>(
+                return MethodMockingContextBase<R, arglist...>::_mock.stubMethodIfNotStubbed(
                         MethodMockingContextBase<R, arglist...>::_mock._proxy,
                         MethodMockingContextImpl<R, arglist...>::_vMethod);
             }
@@ -8104,11 +8154,11 @@ namespace fakeit {
             return origMethodPtr;
         }
 
-        template<unsigned int id, typename R, typename ... arglist>
+        template<typename R, typename ... arglist>
         RecordedMethodBody<R, arglist...> &stubMethodIfNotStubbed(DynamicProxy<C, baseclasses...> &proxy,
                                                                   R (C::*vMethod)(arglist...)) {
             if (!proxy.isMethodStubbed(vMethod)) {
-                proxy.template stubMethod<id>(vMethod, createRecordedMethodBody < R, arglist... > (*this, vMethod));
+                proxy.stubMethod(vMethod, createRecordedMethodBody < R, arglist... > (*this, vMethod));
             }
             Destructible *d = proxy.getMethodMock(vMethod);
             RecordedMethodBody<R, arglist...> *methodMock = dynamic_cast<RecordedMethodBody<R, arglist...> *>(d);
@@ -8229,59 +8279,59 @@ namespace fakeit {
             return impl.stubDataMember(member, ctorargs...);
         }
 
-        template<int id, typename R, typename T, typename ... arglist, class = typename std::enable_if<
+        template<typename R, typename T, typename ... arglist, class = typename std::enable_if<
                 !std::is_void<R>::value && std::is_base_of<T, C>::value>::type>
         MockingContext<R, arglist...> stub(R (T::*vMethod)(arglist...) const) {
             auto methodWithoutConstVolatile = reinterpret_cast<R (T::*)(arglist...)>(vMethod);
-            return impl.template stubMethod<id>(methodWithoutConstVolatile);
+            return impl.stubMethod(methodWithoutConstVolatile);
         }
 
-        template<int id, typename R, typename T, typename... arglist, class = typename std::enable_if<
+        template<typename R, typename T, typename... arglist, class = typename std::enable_if<
                 !std::is_void<R>::value && std::is_base_of<T, C>::value>::type>
         MockingContext<R, arglist...> stub(R(T::*vMethod)(arglist...) volatile) {
             auto methodWithoutConstVolatile = reinterpret_cast<R(T::*)(arglist...)>(vMethod);
-            return impl.template stubMethod<id>(methodWithoutConstVolatile);
+            return impl.stubMethod(methodWithoutConstVolatile);
         }
 
-        template<int id, typename R, typename T, typename... arglist, class = typename std::enable_if<
+        template<typename R, typename T, typename... arglist, class = typename std::enable_if<
                 !std::is_void<R>::value && std::is_base_of<T, C>::value>::type>
         MockingContext<R, arglist...> stub(R(T::*vMethod)(arglist...) const volatile) {
             auto methodWithoutConstVolatile = reinterpret_cast<R(T::*)(arglist...)>(vMethod);
-            return impl.template stubMethod<id>(methodWithoutConstVolatile);
+            return impl.stubMethod(methodWithoutConstVolatile);
         }
 
-        template<int id, typename R, typename T, typename... arglist, class = typename std::enable_if<
+        template<typename R, typename T, typename... arglist, class = typename std::enable_if<
                 !std::is_void<R>::value && std::is_base_of<T, C>::value>::type>
         MockingContext<R, arglist...> stub(R(T::*vMethod)(arglist...)) {
-            return impl.template stubMethod<id>(vMethod);
+            return impl.stubMethod(vMethod);
         }
 
-        template<int id, typename R, typename T, typename... arglist, class = typename std::enable_if<
+        template<typename R, typename T, typename... arglist, class = typename std::enable_if<
                 std::is_void<R>::value && std::is_base_of<T, C>::value>::type>
         MockingContext<void, arglist...> stub(R(T::*vMethod)(arglist...) const) {
             auto methodWithoutConstVolatile = reinterpret_cast<void (T::*)(arglist...)>(vMethod);
-            return impl.template stubMethod<id>(methodWithoutConstVolatile);
+            return impl.stubMethod(methodWithoutConstVolatile);
         }
 
-        template<int id, typename R, typename T, typename... arglist, class = typename std::enable_if<
+        template<typename R, typename T, typename... arglist, class = typename std::enable_if<
                 std::is_void<R>::value && std::is_base_of<T, C>::value>::type>
         MockingContext<void, arglist...> stub(R(T::*vMethod)(arglist...) volatile) {
             auto methodWithoutConstVolatile = reinterpret_cast<void (T::*)(arglist...)>(vMethod);
-            return impl.template stubMethod<id>(methodWithoutConstVolatile);
+            return impl.stubMethod(methodWithoutConstVolatile);
         }
 
-        template<int id, typename R, typename T, typename... arglist, class = typename std::enable_if<
+        template<typename R, typename T, typename... arglist, class = typename std::enable_if<
                 std::is_void<R>::value && std::is_base_of<T, C>::value>::type>
         MockingContext<void, arglist...> stub(R(T::*vMethod)(arglist...) const volatile) {
             auto methodWithoutConstVolatile = reinterpret_cast<void (T::*)(arglist...)>(vMethod);
-            return impl.template stubMethod<id>(methodWithoutConstVolatile);
+            return impl.stubMethod(methodWithoutConstVolatile);
         }
 
-        template<int id, typename R, typename T, typename... arglist, class = typename std::enable_if<
+        template<typename R, typename T, typename... arglist, class = typename std::enable_if<
                 std::is_void<R>::value && std::is_base_of<T, C>::value>::type>
         MockingContext<void, arglist...> stub(R(T::*vMethod)(arglist...)) {
             auto methodWithoutConstVolatile = reinterpret_cast<void (T::*)(arglist...)>(vMethod);
-            return impl.template stubMethod<id>(methodWithoutConstVolatile);
+            return impl.stubMethod(methodWithoutConstVolatile);
         }
 
         DtorMockingContext dtor() {
@@ -9254,13 +9304,13 @@ namespace fakeit {
     mock.dtor().setMethodDetails(#mock,"destructor")
 
 #define Method(mock, method) \
-    mock.template stub<__COUNTER__>(&MOCK_TYPE(mock)::method).setMethodDetails(#mock,#method)
+    mock.stub(&MOCK_TYPE(mock)::method).setMethodDetails(#mock,#method)
 
 #define OverloadedMethod(mock, method, prototype) \
-    mock.template stub<__COUNTER__>(OVERLOADED_METHOD_PTR( mock , method, prototype )).setMethodDetails(#mock,#method)
+    mock.stub(OVERLOADED_METHOD_PTR( mock , method, prototype )).setMethodDetails(#mock,#method)
 
 #define ConstOverloadedMethod(mock, method, prototype) \
-    mock.template stub<__COUNTER__>(CONST_OVERLOADED_METHOD_PTR( mock , method, prototype )).setMethodDetails(#mock,#method)
+    mock.stub(CONST_OVERLOADED_METHOD_PTR( mock , method, prototype )).setMethodDetails(#mock,#method)
 
 #define Verify(...) \
         Verify( __VA_ARGS__ ).setFileInfo(__FILE__, __LINE__, __func__)
