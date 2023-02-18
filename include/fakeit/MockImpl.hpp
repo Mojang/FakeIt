@@ -279,15 +279,15 @@ namespace fakeit {
             throw e;
         }
 
-		template<typename C, baseclasses...>
-		static typename std::enable_if<!std::has_virtual_destructor<C>::value, void>::type
-		setDtorIfHasVirtualDestructor(FakeObject<C, baseclasses...>&) {
+		template<typename T, typename ... BaseClasses>
+		static typename std::enable_if<!std::has_virtual_destructor<T>::value, void>::type
+		setDtorIfHasVirtualDestructor(FakeObject<T, BaseClasses...>&) {
 		}
 
-		template<typename C, baseclasses...>
-		static typename std::enable_if<std::has_virtual_destructor<C>::value, void>::type
-		setDtorIfHasVirtualDestructor(FakeObject<C, baseclasses...>& fake) {
-			void* unmockedDtorStubPtr = union_cast<void*>(&MockImpl<C, baseclasses...>::unmockedDtor);
+		template<typename T, typename ... BaseClasses>
+		static typename std::enable_if<std::has_virtual_destructor<T>::value, void>::type
+		setDtorIfHasVirtualDestructor(FakeObject<T, BaseClasses...>& fake) {
+			void* unmockedDtorStubPtr = union_cast<void*>(&MockImpl<T, BaseClasses...>::unmockedDtor);
 			fake.setDtor(unmockedDtorStubPtr);
 		}
 

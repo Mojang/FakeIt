@@ -2,7 +2,7 @@
 /*
  *  FakeIt - A Simplified C++ Mocking Framework
  *  Copyright (c) Eran Pe'er 2013
- *  Generated: 2023-02-18 11:51:17.621000
+ *  Generated: 2023-02-18 13:26:33.685711
  *  Distributed under the MIT License. Please refer to the LICENSE file at:
  *  https://github.com/eranpeer/FakeIt
  */
@@ -8809,15 +8809,15 @@ namespace fakeit {
             throw e;
         }
 
-		template<typename C, baseclasses...>
-		static typename std::enable_if<!std::has_virtual_destructor<C>::value, void>::type
-		setDtorIfHasVirtualDestructor(FakeObject<C, baseclasses...>&) {
+		template<typename T, typename ... BaseClasses>
+		static typename std::enable_if<!std::has_virtual_destructor<T>::value, void>::type
+		setDtorIfHasVirtualDestructor(FakeObject<T, BaseClasses...>&) {
 		}
 
-		template<typename C, baseclasses...>
-		static typename std::enable_if<std::has_virtual_destructor<C>::value, void>::type
-		setDtorIfHasVirtualDestructor(FakeObject<C, baseclasses...>& fake) {
-			void* unmockedDtorStubPtr = union_cast<void*>(&MockImpl<C, baseclasses...>::unmockedDtor);
+		template<typename T, typename ... BaseClasses>
+		static typename std::enable_if<std::has_virtual_destructor<T>::value, void>::type
+		setDtorIfHasVirtualDestructor(FakeObject<T, BaseClasses...>& fake) {
+			void* unmockedDtorStubPtr = union_cast<void*>(&MockImpl<T, BaseClasses...>::unmockedDtor);
 			fake.setDtor(unmockedDtorStubPtr);
 		}
 
