@@ -279,13 +279,25 @@ namespace fakeit {
             throw e;
         }
 
+		template<typename C, baseclasses...>
+		static typename std::enable_if<!std::has_virtual_destructor<C>::value, void>::type
+		setDtorIfHasVirtualDestructor(FakeObject<C, baseclasses...>&) {
+		}
+
+		template<typename C, baseclasses...>
+		static typename std::enable_if<std::has_virtual_destructor<C>::value, void>::type
+		setDtorIfHasVirtualDestructor(FakeObject<C, baseclasses...>& fake) {
+			void* unmockedDtorStubPtr = union_cast<void*>(&MockImpl<C, baseclasses...>::unmockedDtor);
+			fake.setDtor(unmockedDtorStubPtr);
+		}
+
         static C *createFakeInstance() {
             FakeObject<C, baseclasses...> *fake = new FakeObject<C, baseclasses...>();
             void *unmockedMethodStubPtr = union_cast<void *>(&MockImpl<C, baseclasses...>::unmocked);
-			void *unmockedDtorStubPtr = union_cast<void *>(&MockImpl<C, baseclasses...>::unmockedDtor);
 			fake->getVirtualTable().initAll(unmockedMethodStubPtr);
-			if (VTUtils::hasVirtualDestructor<C>())
-				fake->setDtor(unmockedDtorStubPtr);
+			setDtorIfHasVirtualDestructor(*fake);
+			//if (VTUtils::hasVirtualDestructor<C>())
+			//	fake->setDtor(unmockedDtorStubPtr);
 			return reinterpret_cast<C *>(fake);
         }
 
