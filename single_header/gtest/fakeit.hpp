@@ -2,7 +2,7 @@
 /*
  *  FakeIt - A Simplified C++ Mocking Framework
  *  Copyright (c) Eran Pe'er 2013
- *  Generated: 2023-02-18 16:17:02.980292
+ *  Generated: 2023-02-24 15:54:13.505022
  *  Distributed under the MIT License. Please refer to the LICENSE file at:
  *  https://github.com/eranpeer/FakeIt
  */
@@ -970,8 +970,7 @@ namespace fakeit {
             for (unsigned int i = 0; i < max_size; i++) {
                 out << "  ";
                 auto invocation = actualSequence[i];
-
-                out << invocation->getMethod().name();
+                out << invocation->format();
                 if (i < max_size - 1)
                     out << std::endl;
             }
@@ -8732,13 +8731,23 @@ namespace fakeit {
             throw e;
         }
 
+		template<typename T, typename ... BaseClasses>
+		static typename std::enable_if<!std::has_virtual_destructor<T>::value, void>::type
+		setDtorIfHasVirtualDestructor(FakeObject<T, BaseClasses...>&) {
+		}
+
+		template<typename T, typename ... BaseClasses>
+		static typename std::enable_if<std::has_virtual_destructor<T>::value, void>::type
+		setDtorIfHasVirtualDestructor(FakeObject<T, BaseClasses...>& fake) {
+			void* unmockedDtorStubPtr = union_cast<void*>(&MockImpl<T, BaseClasses...>::unmockedDtor);
+			fake.setDtor(unmockedDtorStubPtr);
+		}
+
         static C *createFakeInstance() {
             FakeObject<C, baseclasses...> *fake = new FakeObject<C, baseclasses...>();
             void *unmockedMethodStubPtr = union_cast<void *>(&MockImpl<C, baseclasses...>::unmocked);
-			void *unmockedDtorStubPtr = union_cast<void *>(&MockImpl<C, baseclasses...>::unmockedDtor);
 			fake->getVirtualTable().initAll(unmockedMethodStubPtr);
-			if (VTUtils::hasVirtualDestructor<C>())
-				fake->setDtor(unmockedDtorStubPtr);
+			setDtorIfHasVirtualDestructor(*fake);
 			return reinterpret_cast<C *>(fake);
         }
 
