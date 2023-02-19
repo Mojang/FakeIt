@@ -8,6 +8,7 @@
  */
 #pragma once
 
+#include "fakeit/FakeitExceptions.hpp"
 #include "fakeit/FakeitContext.hpp"
 #include "fakeit/ThrowFalseEventHandler.hpp"
 
@@ -21,8 +22,8 @@ namespace fakeit {
 
             friend class VerifyNoOtherInvocationsVerificationProgress;
 
-            ~VerifyNoOtherInvocationsExpectation() THROWS {
-                if (std::uncaught_exception()) {
+            ~VerifyNoOtherInvocationsExpectation() FAKEIT_THROWS {
+                if (UncaughtException()) {
                     return;
                 }
 
@@ -53,7 +54,7 @@ namespace fakeit {
                     _isVerified(false) {
             }
 
-            VerifyNoOtherInvocationsExpectation(VerifyNoOtherInvocationsExpectation &other) = default;
+            VerifyNoOtherInvocationsExpectation(const VerifyNoOtherInvocationsExpectation &other) = default;
 
             void VerifyExpectation(VerificationEventHandler &verificationErrorHandler) {
                 if (_isVerified)
@@ -108,7 +109,7 @@ namespace fakeit {
     public:
 
 
-        ~VerifyNoOtherInvocationsVerificationProgress() THROWS {
+        ~VerifyNoOtherInvocationsVerificationProgress() FAKEIT_THROWS {
         };
 
         VerifyNoOtherInvocationsVerificationProgress setFileInfo(const char * file, int line,

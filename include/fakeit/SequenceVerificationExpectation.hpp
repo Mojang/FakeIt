@@ -12,8 +12,8 @@ namespace fakeit {
 
         friend class SequenceVerificationProgress;
 
-        ~SequenceVerificationExpectation() THROWS {
-            if (std::uncaught_exception()) {
+        ~SequenceVerificationExpectation() FAKEIT_THROWS {
+            if (UncaughtException()) {
                 return;
             }
             VerifyExpectation(_fakeit);
@@ -25,6 +25,10 @@ namespace fakeit {
 
         void setExpectedCount(const int count) {
             _expectedCount = count;
+        }
+
+        void expectAnything() {
+            _expectAnything = true;
         }
 
         void setFileInfo(const char * file, int line, const char * callingMethod) {
@@ -39,6 +43,7 @@ namespace fakeit {
         InvocationsSourceProxy _involvedInvocationSources;
         std::vector<Sequence *> _expectedPattern;
         int _expectedCount;
+        bool _expectAnything;
 
         const char * _file;
         int _line;
@@ -53,6 +58,7 @@ namespace fakeit {
                 _involvedInvocationSources(mocks),
                 _expectedPattern(expectedPattern), //
                 _expectedCount(-1), // AT_LEAST_ONCE
+                _expectAnything(false),
                 _line(0),
                 _isVerified(false) {
         }
@@ -66,12 +72,14 @@ namespace fakeit {
             MatchAnalysis ma;
             ma.run(_involvedInvocationSources, _expectedPattern);
 
-            if (isAtLeastVerification() && atLeastLimitNotReached(ma.count)) {
-                return handleAtLeastVerificationEvent(verificationErrorHandler, ma.actualSequence, ma.count);
-            }
+            if (isNotAnythingVerification()) {
+                if (isAtLeastVerification() && atLeastLimitNotReached(ma.count)) {
+                    return handleAtLeastVerificationEvent(verificationErrorHandler, ma.actualSequence, ma.count);
+                }
 
-            if (isExactVerification() && exactLimitNotMatched(ma.count)) {
-                return handleExactVerificationEvent(verificationErrorHandler, ma.actualSequence, ma.count);
+                if (isExactVerification() && exactLimitNotMatched(ma.count)) {
+                    return handleExactVerificationEvent(verificationErrorHandler, ma.actualSequence, ma.count);
+                }
             }
 
             markAsVerified(ma.matchedInvocations);
@@ -95,6 +103,10 @@ namespace fakeit {
             }
         }
 
+        bool isNotAnythingVerification() {
+            return !_expectAnything;
+        }
+
         bool isAtLeastVerification() {
             // negative number represents an "AtLeast" search;
             return _expectedCount < 0;
@@ -104,12 +116,12 @@ namespace fakeit {
             return !isAtLeastVerification();
         }
 
-        bool atLeastLimitNotReached(int count) {
-            return count < -_expectedCount;
+        bool atLeastLimitNotReached(int actualCount) {
+            return actualCount < -_expectedCount;
         }
 
-        bool exactLimitNotMatched(int count) {
-            return count != _expectedCount;
+        bool exactLimitNotMatched(int actualCount) {
+            return actualCount != _expectedCount;
         }
 
         void handleExactVerificationEvent(VerificationEventHandler &verificationErrorHandler,

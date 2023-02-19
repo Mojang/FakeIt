@@ -3,8 +3,10 @@ FakeIt
  
 [![Join the chat at https://gitter.im/eranpeer/FakeIt](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/eranpeer/FakeIt?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-GCC: [![Build Status GCC](https://travis-ci.org/eranpeer/FakeIt.svg?branch=master)](https://travis-ci.org/eranpeer/FakeIt)
-[![Coverage Status](https://coveralls.io/repos/eranpeer/FakeIt/badge.svg?branch=master&service=github)](https://coveralls.io/github/eranpeer/FakeIt?branch=master)
+Linux / GCC: [![Build status Linux/GCC](https://github.com/eranpeer/FakeIt/actions/workflows/ci_linux_gcc.yml/badge.svg)](https://github.com/eranpeer/FakeIt/actions/workflows/ci_linux_gcc.yml)
+[![Coverage Status](https://coveralls.io/repos/github/eranpeer/FakeIt/badge.svg?branch=master)](https://coveralls.io/github/eranpeer/FakeIt?branch=master)
+
+Linux / Clang: [![Build status Linux/Clang](https://github.com/eranpeer/FakeIt/actions/workflows/ci_linux_clang.yml/badge.svg)](https://github.com/eranpeer/FakeIt/actions/workflows/ci_linux_clang.yml)
 
 MSC: [![Build status MSC](https://ci.appveyor.com/api/projects/status/sy2dk8se2yoxaqve)](https://ci.appveyor.com/project/eranpeer/fakeit)
 
@@ -53,7 +55,7 @@ Verify(Method(mock,foo).Using(1));
 
 Checkout the [Quickstart](https://github.com/eranpeer/FakeIt/wiki/Quickstart) for many more examples!
 
-Download the [Latest Release](https://github.com/eranpeer/FakeIt/releases/latest) and start using FakeIt now!
+The master branch has the stable version of FakeIt. Include the most suitable single header in your test project and you are good to go.
 
 ## Features
 * Packaged as a **single header file**.
@@ -75,22 +77,27 @@ If you don't find your unit testing framework on the list, simply use the *stand
 ### Using a pre-packaged single header file
 Pre-packaged single header versions of FakeIt are located under the *single_header* folder.
 Depending on the unit testing framework you use, simply add one of the pre-packaged versions to the include path of your test project:
-* <fakeit_folder>/single_header/[gtest](https://github.com/google/googletest)
-* <fakeit_folder>/single_header/mstest
-* <fakeit_folder>/single_header/boost
-* <fakeit_folder>/single_header/[catch](https://github.com/philsquared/Catch) (Tested with Catch 2.0.1)
-* <fakeit_folder>/single_header/[tpunit](https://github.com/tpounds/tpunitpp)
-* <fakeit_folder>/single_header/[mettle](https://github.com/jimporter/mettle)
-* <fakeit_folder>/single_header/qtest
-* <fakeit_folder>/single_header/standalone
+
+* <fakeit_folder>/single\_header/[gtest](https://github.com/google/googletest)
+* <fakeit_folder>/single\_header/mstest
+* <fakeit_folder>/single\_header/boost
+* <fakeit_folder>/single\_header/[catch](https://github.com/philsquared/Catch) (Tested with Catch 2.0.1)
+* <fakeit_folder>/single\_header/[tpunit](https://github.com/tpounds/tpunitpp)
+* <fakeit_folder>/single\_header/[mettle](https://github.com/jimporter/mettle)
+* <fakeit_folder>/single\_header/qtest
+* <fakeit_folder>/single\_header/nunit - (See caveats in config/nunit/fakeit\_instance.hpp)
+* <fakeit_folder>/single\_header/[cute](https://github.com/PeterSommerlad/CUTE)  
+* <fakeit_folder>/single\_header/standalone
 
 For example, to use fakeit with **Google Test** simply add the *single_header/gtest* folder to the include path of your test project:
 ```
 -I"<fakeit_folder>/single_header/gtest"
 ```
+
 ### Using the source header files
 Fakeit source code header files are located under the *include* foler. To use FakeIt directly from the source code all you need to do is to download the source files and add the *include* folder and the configuration folder of your choice to the include path of your project.
 For example:
+
 * To use fakeit with **Google Test** add the *include* folder and the *config/gtest* folder to the include path of your test project:
 ```
 -I"<fakeit_folder>/include" -I"<fakeit_folder>/config/gtest"
@@ -119,11 +126,21 @@ For example:
 ```
 -I"<fakeit_folder>/include" -I"<fakeit_folder>/config/qtest"
 ```
+* To use fakeit with **NUnit** in a managed Visual Studio C++/CLI project, add the standalone/nunit folder to your project include path. Note, it is useful to define your mocks 
+in `#pragma unmanaged` sections so that you can use lambda expressions.
+
+* To use fakeit with **CUTE** add the *include* folder and the *config/cute* folder to the include path of your test project:
+```
+-I"<fakeit_folder>/include" -I"<fakeit_folder>/config/cute"
+```
 * To use fakeit without any testing framework integration (**standalone**) add the *include* folder and the *config/standalone* folder to the include path of your test project:
 ```
 -I"<fakeit_folder>/include" -I"<fakeit_folder>/config/standalone"
 ```
 It is recommended to build and run the unit tests to make sure FakeIt fits your environment.
+
+For GCC, it is recommended to build the test project with -O1 or -O0 flags. Some features of Fakeit may not work with stonger optimizations!!
+
 #### Building and Running the Unit Tests with GCC
 ```
 cd build
@@ -133,6 +150,7 @@ run the tests by typing
 ```
 ./fakeit_tests.exe
 ```
+
 #### Building and Running the Unit Tests with Clang
 ```
 cd build
@@ -142,10 +160,14 @@ run the tests by typing
 ```
 ./fakeit_tests.exe
 ```
+
 #### Building and Running the Unit Tests with Visual Studio 
-Open the tests/all_tests.vcxproj project file with Visual Studio 2013. Build and run the project and check the test results. 
+Open the tests/all_tests.vcxproj project file with Visual Studio. Build and run the project and check the test results. 
+
 ## Limitations
 * Currently only GCC, Clang and MSC++ are supported.
+* On GCC, optimization flag O2 and O3 are not supported. You must compile the test project with -O1 or -O0.
+* In MSC++, your project must have Edit And Continue debug mode on (https://msdn.microsoft.com/en-us/library/esaeyddf.aspx) which is same of /ZI compiler switch. If you don't use this, you will have exceptions mocking destructors (which includes unique_ptr and other smart pointers). 
 * Can't mock classes with multiple inheritance.
 * Can't mock classes with virtual inheritance.
 * Currently mocks are not thread safe. 

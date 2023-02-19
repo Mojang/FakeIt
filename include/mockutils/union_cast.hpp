@@ -6,14 +6,22 @@
  * Created on Mar 10, 2014
  */
 #pragma once
+
+#if defined(__GNUG__) && !defined(__clang__)
+#define FAKEIT_NO_DEVIRTUALIZE_ATTR [[gnu::optimize("no-devirtualize")]]
+#else
+#define FAKEIT_NO_DEVIRTUALIZE_ATTR
+#endif 
+
 namespace fakeit {
 
-    template<typename TARGET, typename SOURCE>
-    TARGET union_cast(SOURCE source) {
-        //static_assert(sizeof(TARGET) == sizeof(SOURCE), "can't convert");
+    template<typename TargetType, typename SourceType>
+    FAKEIT_NO_DEVIRTUALIZE_ATTR
+    TargetType union_cast(SourceType source) {
+        //static_assert(sizeof(TargetType) == sizeof(SourceType), "can't convert");
         union {
-            SOURCE source;
-            TARGET target;
+            SourceType source;
+            TargetType target;
         } u;
         u.source = source;
         return u.target;

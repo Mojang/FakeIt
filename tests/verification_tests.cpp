@@ -63,7 +63,11 @@ struct BasicVerification: tpunit::TestFixture {
 					TEST(BasicVerification::verify_after_paramter_was_changed__with_Matching), //
 					TEST(BasicVerification::verify_after_paramter_was_changed_with_argument_matcher), //
 					TEST(BasicVerification::verify_no_invocations),
-					TEST(BasicVerification::verify_after_paramter_was_changed_with_Using)) //
+					TEST(BasicVerification::verify_after_paramter_was_changed_with_Using), //
+					TEST(BasicVerification::verificationShouldTolerateNullString),
+					TEST(BasicVerification::verify_any_for_no_invocations),
+					TEST(BasicVerification::verify_any_for_all_invocations),
+					TEST(BasicVerification::verify_any_for_only_some_invocations))
 	{
 	}
 
@@ -490,12 +494,11 @@ struct BasicVerification: tpunit::TestFixture {
 		Verify(2 * call_to_proc2_with_state_1);
 	}
 
+	struct AnInterface {
+		virtual int func(int) = 0;
+	};
 
 	void verifyWithUnverifiedFunctor(){
-
-        struct AnInterface {
-            virtual int func(int) = 0;
-        };
         
         Mock<AnInterface> mock;
 		When(Method(mock, func)).AlwaysReturn(0);
@@ -519,10 +522,6 @@ struct BasicVerification: tpunit::TestFixture {
 
 	void verifyWithUnverifiedFunctorWithUsing() {
 
-		struct AnInterface {
-			virtual int func(int) = 0;
-		};
-
 		Mock<AnInterface> mock;
 		When(Method(mock, func)).AlwaysReturn(0);
 
@@ -534,10 +533,6 @@ struct BasicVerification: tpunit::TestFixture {
 	}
 
 	void verificationProgressShouldBeConvertibleToBool(){
-
-		struct AnInterface {
-			virtual int func(int) = 0;
-		};
 
 		Mock<AnInterface> mock;
 		When(Method(mock, func)).AlwaysReturn(0);
@@ -569,5 +564,60 @@ struct BasicVerification: tpunit::TestFixture {
 		ASSERT_TRUE(!Verify(Method(mock, func).Using(1)).Never());
 		ASSERT_FALSE(!VerifyNoOtherInvocations(Method(mock, func)));
     }
+
+	struct RefEater {
+		virtual int eatChar(char*) = 0;
+		virtual int eatConstChar(const char*) = 0;
+	};
+
+	void verificationShouldTolerateNullString(){
+
+
+		Mock<RefEater> mock;
+		When( Method( mock, eatChar ) ).AlwaysReturn( 0 );
+		When( Method( mock, eatConstChar ) ).AlwaysReturn( 0 );
+
+		RefEater& obj = mock.get();
+		obj.eatConstChar( nullptr );
+		obj.eatConstChar( "string" );
+		obj.eatChar( nullptr );
+		char str[] = { 'a', '\0' };
+		obj.eatChar( str );
+
+		Verify(Method(mock,eatChar)).Exactly(2);
+		Verify(Method(mock,eatConstChar)).Exactly(2);
+		ASSERT_THROW(Verify(Method(mock, eatChar)).Exactly(3), fakeit::VerificationException);
+		ASSERT_THROW(Verify(Method(mock, eatConstChar)).Exactly(3), fakeit::VerificationException);
+	}
+
+	void verify_any_for_no_invocations()
+	{
+		Mock<SomeInterface> mock;
+		Verify(Method(mock, func)).Any();
+		VerifyNoOtherInvocations(mock);
+	}
+
+	void verify_any_for_all_invocations()
+	{
+		Mock<SomeInterface> mock;
+		Fake(Method(mock,func), Method(mock,proc));
+		SomeInterface &i = mock.get();
+		i.func(5);
+		i.proc(10);
+		Verify(Method(mock, func)).Any();
+		Verify(Method(mock, proc)).Any();
+		VerifyNoOtherInvocations(mock);
+	}
+
+	void verify_any_for_only_some_invocations()
+	{
+		Mock<SomeInterface> mock;
+		Fake(Method(mock,func), Method(mock,proc));
+		SomeInterface &i = mock.get();
+		i.func(5);
+		i.proc(10);
+		Verify(Method(mock, func)).Any();
+		ASSERT_THROW(VerifyNoOtherInvocations(mock), fakeit::VerificationException);
+	}
 
 } __BasicVerification;
