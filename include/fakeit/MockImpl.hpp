@@ -32,21 +32,12 @@ namespace fakeit {
         }
 
         MockImpl(FakeitContext &fakeit)
-                : MockImpl<C, baseclasses...>(fakeit, *(createFakeInstance()), false) {
-            FakeObject<C, baseclasses...> *fake = reinterpret_cast<FakeObject<C, baseclasses...> *>(_instance);
+                : MockImpl<C, baseclasses...>(fakeit, *(createFakeInstance()), false){
+            FakeObject<C, baseclasses...> *fake = asFakeObject(_instanceOwner.get());
             fake->getVirtualTable().setCookie(1, this);
         }
 
-        virtual ~MockImpl() NO_THROWS {
-            _proxy.detach();
-            if (_isOwner) {
-                FakeObject<C, baseclasses...> *fake = reinterpret_cast<FakeObject<C, baseclasses...> *>(_instance);
-                delete fake;
-            }
-        }
-
-        void detach() {
-            _isOwner = false;
+        virtual ~MockImpl() FAKEIT_NO_THROWS {
             _proxy.detach();
         }
 
@@ -63,8 +54,8 @@ namespace fakeit {
 
 	    void initDataMembersIfOwner()
 	    {
-		    if (_isOwner) {
-			    FakeObject<C, baseclasses...> *fake = reinterpret_cast<FakeObject<C, baseclasses...> *>(_instance);
+		    if (isOwner()) {
+			    FakeObject<C, baseclasses...> *fake = asFakeObject(_instanceOwner.get());
 			    fake->initializeDataMembersArea();
 		    }
 	    }
@@ -92,10 +83,10 @@ namespace fakeit {
             return _fakeit;
         }
 
-        template<class DATA_TYPE, typename T, typename ... arglist, class = typename std::enable_if<std::is_base_of<T, C>::value>::type>
-        DataMemberStubbingRoot<C, DATA_TYPE> stubDataMember(DATA_TYPE T::*member, const arglist &... ctorargs) {
+        template<class DataType, typename T, typename ... arglist, class = typename std::enable_if<std::is_base_of<T, C>::value>::type>
+        DataMemberStubbingRoot<C, DataType> stubDataMember(DataType T::*member, const arglist &... ctorargs) {
             _proxy.stubDataMember(member, ctorargs...);
-            return DataMemberStubbingRoot<T, DATA_TYPE>();
+            return DataMemberStubbingRoot<T, DataType>();
         }
 
         template<int id, typename R, typename T, typename ... arglist, class = typename std::enable_if<std::is_base_of<T, C>::value>::type>
@@ -108,11 +99,34 @@ namespace fakeit {
             return DtorMockingContext(new DtorMockingContextImpl(*this));
         }
 
+//		std::shared_ptr<C> getShared() {
+//			auto * a = &_instanceOwner;
+//			auto * b = fakeit::union_cast<typename std::shared_ptr<C>*>(a);
+//			return *b;
+//		}
+
     private:
-        DynamicProxy<C, baseclasses...> _proxy;
-        C *_instance; //
-        bool _isOwner;
+		// Keep members in this order! _proxy should be deleted before _inatanceOwner.
+		// Not that the dtor of MockImpl calls _proxy.detach(), hence the detach happens 
+		// before the destructor of the _proxy is invoked. As a result the dtor method in the virtual
+		// table of the fakedObject is reverted to unmockedDtor() before the proxy is deleted.
+		// This way, any recorded arguments in the proxy that capture the fakeObject itself will
+		// invoke the unmockedDtor as part of their dtor and the deletion will be completly ignored.
+		// This solves issue #153.
+		// The actual deletion of fakedObject will be then triggered by the mock itself when deleting
+		// the instanceOwner.
+		std::shared_ptr<FakeObject<C, baseclasses...>> _instanceOwner;
+		DynamicProxy<C, baseclasses...> _proxy;
         FakeitContext &_fakeit;
+
+        MockImpl(FakeitContext &fakeit, C &obj, bool isSpy)
+                : _instanceOwner(isSpy ? nullptr : asFakeObject(&obj))
+				, _proxy{obj}
+				, _fakeit(fakeit) {}
+
+        static FakeObject<C, baseclasses...>* asFakeObject(void* instance){
+            return reinterpret_cast<FakeObject<C, baseclasses...> *>(instance);
+        }
 
         template<typename R, typename ... arglist>
         class MethodMockingContextBase : public MethodMockingContext<R, arglist...>::Context {
@@ -166,8 +180,28 @@ namespace fakeit {
                     : MethodMockingContextBase<R, arglist...>(mock), _vMethod(vMethod) {
             }
 
-            
-            virtual std::function<R(arglist&...)> getOriginalMethod() override {
+            template<typename ... T, typename std::enable_if<all_true<smart_is_copy_constructible<T>::value...>::value, int>::type = 0>
+            std::function<R(arglist&...)> getOriginalMethodCopyArgsInternal(int) {
+                void *mPtr = MethodMockingContextBase<R, arglist...>::_mock.getOriginalMethod(_vMethod);
+                C * instance = &(MethodMockingContextBase<R, arglist...>::_mock.get());
+                return [=](arglist&... args) -> R {
+                    auto m = union_cast<typename VTableMethodType<R,arglist...>::type>(mPtr);
+                    return m(instance, args...);
+                };
+            }
+
+            /* LCOV_EXCL_START */
+            template<typename ... T>
+            [[noreturn]] std::function<R(arglist&...)> getOriginalMethodCopyArgsInternal(long) {
+                std::abort(); // Shouldn't ever be called, Spy() should static_assert an error before.
+            }
+            /* LCOV_EXCL_STOP */
+
+            std::function<R(arglist&...)> getOriginalMethodCopyArgs() override {
+                return getOriginalMethodCopyArgsInternal<arglist...>(0);
+            }
+
+            std::function<R(arglist&...)> getOriginalMethodForwardArgs() override {
                 void *mPtr = MethodMockingContextBase<R, arglist...>::_mock.getOriginalMethod(_vMethod);
                 C * instance = &(MethodMockingContextBase<R, arglist...>::_mock.get());
                 return [=](arglist&... args) -> R {
@@ -211,20 +245,28 @@ namespace fakeit {
                     : MethodMockingContextBase<void>(mock) {
             }
 
-            virtual std::function<void()> getOriginalMethod() override {
-                C &instance = MethodMockingContextBase<void>::_mock.get();
-                return [=, &instance]() -> void {
+            std::function<void()> getOriginalMethodCopyArgs() override {
+                return [=]() -> void {
+                };
+            }
+
+            std::function<void()> getOriginalMethodForwardArgs() override {
+                return [=]() -> void {
                 };
             }
 
         };
 
         static MockImpl<C, baseclasses...> *getMockImpl(void *instance) {
-            FakeObject<C, baseclasses...> *fake = reinterpret_cast<FakeObject<C, baseclasses...> *>(instance);
+            FakeObject<C, baseclasses...> *fake = asFakeObject(instance);
             MockImpl<C, baseclasses...> *mock = reinterpret_cast<MockImpl<C, baseclasses...> *>(fake->getVirtualTable().getCookie(
                     1));
             return mock;
         }
+
+        bool isOwner(){ return _instanceOwner != nullptr;}
+
+		void unmockedDtor() {}
 
         void unmocked() {
             ActualInvocation<> invocation(Invocation::nextInvocationOrdinal(), UnknownMethod::instance());
@@ -237,11 +279,24 @@ namespace fakeit {
             throw e;
         }
 
+		template<typename T, typename ... BaseClasses>
+		static typename std::enable_if<!std::has_virtual_destructor<T>::value, void>::type
+		setDtorIfHasVirtualDestructor(FakeObject<T, BaseClasses...>&) {
+		}
+
+		template<typename T, typename ... BaseClasses>
+		static typename std::enable_if<std::has_virtual_destructor<T>::value, void>::type
+		setDtorIfHasVirtualDestructor(FakeObject<T, BaseClasses...>& fake) {
+			void* unmockedDtorStubPtr = union_cast<void*>(&MockImpl<T, BaseClasses...>::unmockedDtor);
+			fake.setDtor(unmockedDtorStubPtr);
+		}
+
         static C *createFakeInstance() {
             FakeObject<C, baseclasses...> *fake = new FakeObject<C, baseclasses...>();
             void *unmockedMethodStubPtr = union_cast<void *>(&MockImpl<C, baseclasses...>::unmocked);
-            fake->getVirtualTable().initAll(unmockedMethodStubPtr);
-            return reinterpret_cast<C *>(fake);
+			fake->getVirtualTable().initAll(unmockedMethodStubPtr);
+			setDtorIfHasVirtualDestructor(*fake);
+			return reinterpret_cast<C *>(fake);
         }
 
         template<typename R, typename ... arglist>
@@ -279,10 +334,6 @@ namespace fakeit {
             return *dtorMock;
         }
 
-        MockImpl(FakeitContext &fakeit, C &obj, bool isSpy)
-                : _proxy{obj}, _instance(&obj), _isOwner(!isSpy), _fakeit(fakeit) {
-        }
-
         template<typename R, typename ... arglist>
         static RecordedMethodBody<R, arglist...> *createRecordedMethodBody(MockObject<C> &mock,
                                                                            R(C::*vMethod)(arglist...)) {
@@ -292,6 +343,12 @@ namespace fakeit {
         static RecordedMethodBody<void> *createRecordedDtorBody(MockObject<C> &mock) {
             return new RecordedMethodBody<void>(mock.getFakeIt(), "dtor");
         }
-
     };
 }
+/*
+ * Here is some idea:
+ * When mocking the dtor, dont replace the default implementation. Instead, have the default implementation invoke
+ * the stubbed method (if exists).
+ * This way we can also do extra work in the default implementation like mark the instance as deleted so the mock
+ * will know not to delete it if already deleted!!!
+ */

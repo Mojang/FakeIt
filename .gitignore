@@ -32,6 +32,8 @@ Debug/
 ipch/
 TestResults/
 tests/cmake-build-debug/
+tests/x64/
+*/.vs/
 
 # Eclipse
 .settings/
@@ -58,3 +60,4 @@ bii/
 
 *.*~
 *.nupkg
+

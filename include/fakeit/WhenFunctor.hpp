@@ -10,6 +10,7 @@
 #include "fakeit/StubbingImpl.hpp"
 #include "fakeit/StubbingProgress.hpp"
 #include "fakeit/FakeitContext.hpp"
+#include "fakeit/FakeitExceptions.hpp"
 
 #include "mockutils/smart_ptr.hpp"
 #include "mockutils/Destructible.hpp"
@@ -23,16 +24,16 @@ namespace fakeit {
 
             friend class WhenFunctor;
 
-            virtual ~StubbingChange() THROWS {
+            virtual ~StubbingChange() FAKEIT_THROWS {
 
-                if (std::uncaught_exception()) {
+                if (UncaughtException()) {
                     return;
                 }
 
                 _xaction.commit();
             }
 
-            StubbingChange(StubbingChange &other) :
+            StubbingChange(const StubbingChange &other) :
                     _xaction(other._xaction) {
             }
 
@@ -54,7 +55,7 @@ namespace fakeit {
 
             virtual ~MethodProgress() override = default;
 
-            MethodProgress(MethodProgress &other) :
+            MethodProgress(const MethodProgress &other) :
                     _progress(other._progress), _context(other._context) {
             }
 
