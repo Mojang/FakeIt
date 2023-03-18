@@ -2,7 +2,7 @@
 /*
  *  FakeIt - A Simplified C++ Mocking Framework
  *  Copyright (c) Eran Pe'er 2013
- *  Generated: 2023-03-09 16:30:08.395009
+ *  Generated: 2023-03-20 07:43:24.002454
  *  Distributed under the MIT License. Please refer to the LICENSE file at:
  *  https://github.com/eranpeer/FakeIt
  */
@@ -8887,6 +8887,13 @@ namespace fakeit {
 
         explicit Mock(C &obj) : impl(Fakeit, obj) {
         }
+
+
+
+        Mock(const Mock&) = delete;
+        Mock(Mock&&) = delete;
+        Mock& operator=(const Mock&) = delete;
+        Mock& operator=(Mock&&) = delete;
 
         virtual C &get() {
             return impl.get();

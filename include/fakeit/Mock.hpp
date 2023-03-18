@@ -31,6 +31,13 @@ namespace fakeit {
         explicit Mock(C &obj) : impl(Fakeit, obj) {
         }
 
+        // Copying or moving a Mock causes issues where mocked methods don't copy or move with it
+        // Delete both the copy and move constructors, and the assignment and move operators
+        Mock(const Mock&) = delete;
+        Mock(Mock&&) = delete;
+        Mock& operator=(const Mock&) = delete;
+        Mock& operator=(Mock&&) = delete;
+
         virtual C &get() {
             return impl.get();
         }
