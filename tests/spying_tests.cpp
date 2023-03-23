@@ -209,7 +209,7 @@ struct SpyingTests: tpunit::TestFixture {
 
     void callMemberMethodFromSpiedMethod() {
         Dummy instance;
-        auto spy = Mock<Dummy>(instance);
+        Mock<Dummy> spy(instance);
         Spy(Method(spy, method));
 		Spy(Method(spy, callMethod));
 		spy.get().callMethod();
