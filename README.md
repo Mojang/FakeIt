@@ -3,12 +3,12 @@ FakeIt
  
 [![Join the chat at https://gitter.im/eranpeer/FakeIt](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/eranpeer/FakeIt?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-Linux / GCC: [![Build status Linux/GCC](https://github.com/eranpeer/FakeIt/actions/workflows/ci_linux_gcc.yml/badge.svg)](https://github.com/eranpeer/FakeIt/actions/workflows/ci_linux_gcc.yml)
+Linux / GCC: [![CI Linux/GCC](https://github.com/eranpeer/FakeIt/actions/workflows/ci_linux_gcc.yml/badge.svg?branch=master&event=push)](https://github.com/eranpeer/FakeIt/actions/workflows/ci_linux_gcc.yml?query=branch%3Amaster+event%3Apush)
 [![Coverage Status](https://coveralls.io/repos/github/eranpeer/FakeIt/badge.svg?branch=master)](https://coveralls.io/github/eranpeer/FakeIt?branch=master)
 
-Linux / Clang: [![Build status Linux/Clang](https://github.com/eranpeer/FakeIt/actions/workflows/ci_linux_clang.yml/badge.svg)](https://github.com/eranpeer/FakeIt/actions/workflows/ci_linux_clang.yml)
+Linux / Clang: [![CI Linux/Clang](https://github.com/eranpeer/FakeIt/actions/workflows/ci_linux_clang.yml/badge.svg?branch=master&event=push)](https://github.com/eranpeer/FakeIt/actions/workflows/ci_linux_clang.yml?query=branch%3Amaster+event%3Apush)
 
-MSC: [![Build status MSC](https://ci.appveyor.com/api/projects/status/sy2dk8se2yoxaqve)](https://ci.appveyor.com/project/eranpeer/fakeit)
+MSVC: [![CI Windows/MSVC](https://github.com/eranpeer/FakeIt/actions/workflows/ci_windows_msvc.yml/badge.svg?branch=master&event=push)](https://github.com/eranpeer/FakeIt/actions/workflows/ci_windows_msvc.yml?query=branch%3Amaster+event%3Apush)
 
 FakeIt is a simple mocking framework for C++. It supports GCC, Clang and MS Visual C++.
 
@@ -16,10 +16,11 @@ FakeIt is written in C++11 and can be used for testing both C++11 and C++ projec
 
 ```cpp
 struct SomeInterface {
-	virtual int foo(int) = 0;
-	virtual int bar(string) = 0;
+    virtual int foo(int) = 0;
+    virtual int bar(string) = 0;
 };
 ```
+
 ```cpp
 // Instantiate a mock object.
 Mock<SomeInterface> mock;
@@ -32,10 +33,10 @@ SomeInterface &i = mock.get();
 
 // Will print "1". 
 cout << i.foo(0);
-
-
 ```
-Verify method invocation
+
+Verify method invocation:
+
 ```cpp
 Mock<SomeInterface> mock;
 		
@@ -74,6 +75,22 @@ FakeIt is pre-configured to work with some of the major unit testing frameworks.
 
 If you don't find your unit testing framework on the list, simply use the *standalone* configuration.
 
+
+### Configurations' name
+
+Here's the list of each unit testing framework FakeIt is pre-configured with and the name of the respective configuration to use if you want FakeIt to integrate with them (if your favorite unit testing framework is not on the list, simply use the `standalone` configuration):
+* GoogleTest: `gtest`
+* MSTest: `mstest`
+* Boost.Test: `boost`
+* Catch2: `catch`
+* tpunit++: `tpunit`
+* mettle: `mettle`
+* Qt Test: `qtest`
+* NUnit: `nunit`
+* CUTE: `cute`
+* doctest: `doctest`
+* Without a unit test framework: `standalone`
+
 ### Using a pre-packaged single header file
 Pre-packaged single header versions of FakeIt are located under the *single_header* folder.
 Depending on the unit testing framework you use, simply add one of the pre-packaged versions to the include path of your test project:
@@ -81,13 +98,14 @@ Depending on the unit testing framework you use, simply add one of the pre-packa
 * <fakeit_folder>/single\_header/[gtest](https://github.com/google/googletest)
 * <fakeit_folder>/single\_header/mstest
 * <fakeit_folder>/single\_header/boost
-* <fakeit_folder>/single\_header/[catch](https://github.com/philsquared/Catch) (Tested with Catch 2.0.1)
+* <fakeit_folder>/single\_header/[catch](https://github.com/catchorg/Catch2) - (v2 and v3)
 * <fakeit_folder>/single\_header/[tpunit](https://github.com/tpounds/tpunitpp)
 * <fakeit_folder>/single\_header/[mettle](https://github.com/jimporter/mettle)
 * <fakeit_folder>/single\_header/qtest
 * <fakeit_folder>/single\_header/nunit - (See caveats in config/nunit/fakeit\_instance.hpp)
-* <fakeit_folder>/single\_header/[cute](https://github.com/PeterSommerlad/CUTE)  
-* <fakeit_folder>/single\_header/standalone
+* <fakeit_folder>/single\_header/[cute](https://github.com/PeterSommerlad/CUTE)
+* <fakeit_folder>/single\_header/[doctest](https://github.com/doctest/doctest)
+* <fakeit_folder>/single\_header/standalone - (if you don't use a unit testing framework)
 
 For example, to use fakeit with **Google Test** simply add the *single_header/gtest* folder to the include path of your test project:
 ```
@@ -102,67 +120,91 @@ For example:
 ```
 -I"<fakeit_folder>/include" -I"<fakeit_folder>/config/gtest"
 ```
-* To use fakeit with **MS Test** add the *include* folder and the *config/mstest* folder to the include path of your test project:
-```
--I"<fakeit_folder>/include" -I"<fakeit_folder>/config/mstest"
-```
-* To use fakeit with **Boost Test** add the *include* folder and the *config/boost* folder to the include path of your test project:
-```
--I"<fakeit_folder>/include" -I"<fakeit_folder>/config/boost"
-```
-* To use fakeit with **Catch** add the *include* folder and the *config/catch* folder to the include path of your test project:
-```
--I"<fakeit_folder>/include" -I"<fakeit_folder>/config/catch"
-```
-* To use fakeit with **tpunit** add the *include* folder and the *config/tpunit* folder to the include path of your test project:
-```
--I"<fakeit_folder>/include" -I"<fakeit_folder>/config/tpunit"
-```
-* To use fakeit with **Mettle** add the *include* folder and the *config/mettle* folder to the include path of your test project:
-```
--I"<fakeit_folder>/include" -I"<fakeit_folder>/config/mettle"
-```
-* To use fakeit with **QTest** add the *include* folder and the *config/qtest* folder to the include path of your test project:
-```
--I"<fakeit_folder>/include" -I"<fakeit_folder>/config/qtest"
-```
-* To use fakeit with **NUnit** in a managed Visual Studio C++/CLI project, add the standalone/nunit folder to your project include path. Note, it is useful to define your mocks 
-in `#pragma unmanaged` sections so that you can use lambda expressions.
+* For every other unit test framework (or for using FakeIt without a unit test framework), just replace `gtest` by the name of the configuration (see `Configurations' name` section for details).
+* If you use FakeIt with **NUnit** in a managed Visual Studio C++/CLI project, note that it is useful to define your mocks in `#pragma unmanaged` sections so that you can use lambda expressions.
 
-* To use fakeit with **CUTE** add the *include* folder and the *config/cute* folder to the include path of your test project:
-```
--I"<fakeit_folder>/include" -I"<fakeit_folder>/config/cute"
-```
-* To use fakeit without any testing framework integration (**standalone**) add the *include* folder and the *config/standalone* folder to the include path of your test project:
-```
--I"<fakeit_folder>/include" -I"<fakeit_folder>/config/standalone"
-```
 It is recommended to build and run the unit tests to make sure FakeIt fits your environment.
 
-For GCC, it is recommended to build the test project with -O1 or -O0 flags. Some features of Fakeit may not work with stonger optimizations!!
+For GCC, it is recommended to build the test project with -O1 or -O0 flags. Some features of FakeIt may not work with stronger optimizations!!
 
-#### Building and Running the Unit Tests with GCC
-```
-cd build
-make all
-```
-run the tests by typing
-```
-./fakeit_tests.exe
-```
+### Installing FakeIt with CMake
 
-#### Building and Running the Unit Tests with Clang
+Clone the repository, `cd` into it then execute the following commands:
 ```
-cd build
-make -f clang_makefile all
-```
-run the tests by typing
-```
-./fakeit_tests.exe
+cmake -S . -B build -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+cmake --build build
+cmake --install build
 ```
 
-#### Building and Running the Unit Tests with Visual Studio 
-Open the tests/all_tests.vcxproj project file with Visual Studio. Build and run the project and check the test results. 
+Replace `<INSTALL_DIR>` by the path of the directory where you want to install FakeIt.
+
+Then in your project's `CMakeLists.txt`:
+```
+find_package(FakeIt REQUIRED)
+[...]
+target_link_libraries(<YOUR_TARGET> PRIVATE FakeIt::FakeIt-<CONFIG>)
+```
+
+Where `<YOUR_TARGET>` is the name of the target you want to link FakeIt with, and `<CONFIG>` is the name of the specific configuration you want to use (see `Configurations' name` section for details).
+
+Then, when you'll invoke CMake's configure command, pass the argument `-DFakeIt_ROOT=<INSTALL_DIR>`, with `<INSTALL_DIR>` being the directory where you installed FakeIt.
+
+### Installing FakeIt through Conan
+
+To use FakeIt with Conan, you'll need a `conanfile.txt` like this: 
+```
+[requires]
+fakeit/<VERSION>
+
+[options]
+fakeit:integration=<CONFIG>
+```
+
+Replace `<VERSION>` by the version of FakeIt you want to use, and `<CONFIG>` with the name of the configuration you want to use (see `Configurations' name` section for details).
+
+### Installing FakeIt through vcpkg
+
+You can download and install fakeit using the [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager:
+
+    git clone https://github.com/Microsoft/vcpkg.git
+    cd vcpkg
+    ./bootstrap-vcpkg.sh
+    ./vcpkg integrate install
+    ./vcpkg install fakeit
+
+The fakeit port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
+
+## Running the tests
+
+### Building and Running the Unit Tests with GCC
+```
+CC=gcc CXX=g++ cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_TESTING=ON
+cmake --build build -j
+```
+Run the tests by typing:
+```
+./build/tests/FakeIt_tests
+```
+
+### Building and Running the Unit Tests with Clang
+```
+CC=clang CXX=clang++ cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_TESTING=ON
+cmake --build build -j
+```
+Run the tests by typing:
+```
+./build/tests/FakeIt_tests
+```
+
+### Building and Running the Unit Tests with Visual Studio 
+```
+cmake -S . -B build -G "Visual Studio 17 2022" -DENABLE_TESTING=ON
+cmake --build build --config Debug -j
+```
+Run the tests by typing:
+```
+./build/tests/Debug/FakeIt_tests.exe
+```
 
 ## Limitations
 * Currently only GCC, Clang and MSC++ are supported.
