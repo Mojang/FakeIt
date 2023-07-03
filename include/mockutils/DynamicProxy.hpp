@@ -64,13 +64,14 @@ namespace fakeit {
 
         static_assert(std::is_polymorphic<C>::value, "DynamicProxy requires a polymorphic type");
 
-        DynamicProxy(C &inst) :
+        DynamicProxy(C &inst, bool isUsingSpy) :
                 instance(inst),
                 originalVtHandle(VirtualTable<C, baseclasses...>::getVTable(instance).createHandle()),
                 _methodMocks(VTUtils::getVTSize<C>()),
                 _offsets(VTUtils::getVTSize<C>()),
-                _invocationHandlers(_methodMocks, _offsets) {
-            _cloneVt.copyFrom(originalVtHandle.restore());
+                _invocationHandlers(_methodMocks, _offsets),
+                _isUsingSpy(isUsingSpy) {
+            _cloneVt.copyFrom(originalVtHandle.restore(), isUsingSpy);
             _cloneVt.setCookie(InvocationHandlerCollection::VtCookieIndex, &_invocationHandlers);
             getFake().setVirtualTable(_cloneVt);
         }
@@ -93,7 +94,7 @@ namespace fakeit {
             _members = {};
 			_offsets = {};
             _offsets.resize(VTUtils::getVTSize<C>());
-            _cloneVt.copyFrom(originalVtHandle.restore());
+            _cloneVt.copyFrom(originalVtHandle.restore(), _isUsingSpy);
         }
 
 		void Clear()
@@ -191,6 +192,7 @@ namespace fakeit {
         std::vector<std::shared_ptr<Destructible>> _members;
         std::vector<size_t> _offsets;
         InvocationHandlers _invocationHandlers;
+        bool _isUsingSpy = false;
 
         FakeObject<C, baseclasses...> &getFake() {
             return reinterpret_cast<FakeObject<C, baseclasses...> &>(instance);

@@ -121,7 +121,7 @@ namespace fakeit {
 
         MockImpl(FakeitContext &fakeit, C &obj, bool isSpy)
                 : _instanceOwner(isSpy ? nullptr : asFakeObject(&obj))
-				, _proxy{obj}
+				, _proxy{obj, isSpy}
 				, _fakeit(fakeit) {}
 
         static FakeObject<C, baseclasses...>* asFakeObject(void* instance){
