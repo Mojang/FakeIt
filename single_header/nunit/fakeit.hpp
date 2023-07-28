@@ -2,7 +2,7 @@
 /*
  *  FakeIt - A Simplified C++ Mocking Framework
  *  Copyright (c) Eran Pe'er 2013
- *  Generated: 2023-03-20 07:43:24.064977
+ *  Generated: 2023-07-08 18:53:41.866779
  *  Distributed under the MIT License. Please refer to the LICENSE file at:
  *  https://github.com/eranpeer/FakeIt
  */
@@ -5496,12 +5496,14 @@ namespace fakeit {
             return *vt;
         }
 
-        void copyFrom(VirtualTable<C, baseclasses...> &from) {
+        void copyFrom(VirtualTable<C, baseclasses...> &from, bool isUsingSpy) {
             auto size = VTUtils::getVTSize<C>();
             for (unsigned int i = 0; i < size; i++) {
                 _firstMethod[i] = from.getMethod(i);
             }
-            if (VTUtils::hasVirtualDestructor<C>())
+
+
+            if (VTUtils::hasVirtualDestructor<C>() && !isUsingSpy)
                 setCookie(dtorCookieIndex, from.getCookie(dtorCookieIndex));
         }
 
@@ -5674,7 +5676,7 @@ namespace fakeit {
             return *vt;
         }
 
-        void copyFrom(VirtualTable<C, baseclasses...> &from) {
+        void copyFrom(VirtualTable<C, baseclasses...> &from, bool) {
             unsigned int size = VTUtils::getVTSize<C>();
 
             for (size_t i = 0; i < size; ++i) {
@@ -5959,13 +5961,14 @@ namespace fakeit {
 
         static_assert(std::is_polymorphic<C>::value, "DynamicProxy requires a polymorphic type");
 
-        DynamicProxy(C &inst) :
+        DynamicProxy(C &inst, bool isUsingSpy) :
                 instance(inst),
                 originalVtHandle(VirtualTable<C, baseclasses...>::getVTable(instance).createHandle()),
                 _methodMocks(VTUtils::getVTSize<C>()),
                 _offsets(VTUtils::getVTSize<C>()),
-                _invocationHandlers(_methodMocks, _offsets) {
-            _cloneVt.copyFrom(originalVtHandle.restore());
+                _invocationHandlers(_methodMocks, _offsets),
+                _isUsingSpy(isUsingSpy) {
+            _cloneVt.copyFrom(originalVtHandle.restore(), isUsingSpy);
             _cloneVt.setCookie(InvocationHandlerCollection::VtCookieIndex, &_invocationHandlers);
             getFake().setVirtualTable(_cloneVt);
         }
@@ -5988,7 +5991,7 @@ namespace fakeit {
             _members = {};
 			_offsets = {};
             _offsets.resize(VTUtils::getVTSize<C>());
-            _cloneVt.copyFrom(originalVtHandle.restore());
+            _cloneVt.copyFrom(originalVtHandle.restore(), _isUsingSpy);
         }
 
 		void Clear()
@@ -6086,6 +6089,7 @@ namespace fakeit {
         std::vector<std::shared_ptr<Destructible>> _members;
         std::vector<size_t> _offsets;
         InvocationHandlers _invocationHandlers;
+        bool _isUsingSpy = false;
 
         FakeObject<C, baseclasses...> &getFake() {
             return reinterpret_cast<FakeObject<C, baseclasses...> &>(instance);
@@ -8580,7 +8584,7 @@ namespace fakeit {
 
         MockImpl(FakeitContext &fakeit, C &obj, bool isSpy)
                 : _instanceOwner(isSpy ? nullptr : asFakeObject(&obj))
-				, _proxy{obj}
+				, _proxy{obj, isSpy}
 				, _fakeit(fakeit) {}
 
         static FakeObject<C, baseclasses...>* asFakeObject(void* instance){

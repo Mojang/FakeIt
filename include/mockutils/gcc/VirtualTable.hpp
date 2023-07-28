@@ -73,7 +73,7 @@ namespace fakeit {
             return *vt;
         }
 
-        void copyFrom(VirtualTable<C, baseclasses...> &from) {
+        void copyFrom(VirtualTable<C, baseclasses...> &from, bool) {
             unsigned int size = VTUtils::getVTSize<C>();
             //firstMethod[-1] = from.firstMethod[-1]; // copy type_info
             for (size_t i = 0; i < size; ++i) {

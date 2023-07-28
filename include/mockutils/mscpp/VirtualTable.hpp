@@ -188,12 +188,14 @@ namespace fakeit {
             return *vt;
         }
 
-        void copyFrom(VirtualTable<C, baseclasses...> &from) {
+        void copyFrom(VirtualTable<C, baseclasses...> &from, bool isUsingSpy) {
             auto size = VTUtils::getVTSize<C>();
             for (unsigned int i = 0; i < size; i++) {
                 _firstMethod[i] = from.getMethod(i);
             }
-            if (VTUtils::hasVirtualDestructor<C>())
+            // Only try to get the cookie if we aren't using a spy. If we aren't using a spy
+            // we end up indexing out of bounds and reading garbage memory
+            if (VTUtils::hasVirtualDestructor<C>() && !isUsingSpy)
                 setCookie(dtorCookieIndex, from.getCookie(dtorCookieIndex));
         }
 
