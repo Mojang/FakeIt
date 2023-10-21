@@ -7,7 +7,7 @@
  */
 #pragma once
 
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <type_traits>
 #include <memory>
 #include <iosfwd>

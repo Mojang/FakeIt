@@ -12,7 +12,7 @@
 
 
 
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <memory>
 #include <set>
 #include <vector>
@@ -1197,14 +1197,14 @@ static fakeit::DefaultFakeit& Fakeit = fakeit::GTestFakeit::getInstance();
 
 #include <memory>
 #undef max
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <type_traits>
 #include <vector>
 #include <array>
 #include <new>
 #include <limits>
 
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <type_traits>
 namespace fakeit {
 
@@ -6125,12 +6125,12 @@ namespace fakeit {
 
     };
 }
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <type_traits>
 #include <memory>
 #include <iosfwd>
 #include <vector>
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <tuple>
 #include <tuple>
 
@@ -6208,7 +6208,7 @@ namespace fakeit {
     };
 
 }
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <tuple>
 #include <string>
 #include <iosfwd>
@@ -7046,7 +7046,7 @@ namespace fakeit {
     struct UserDefinedInvocationMatcher : ActualInvocation<arglist...>::Matcher {
         virtual ~UserDefinedInvocationMatcher() = default;
 
-        UserDefinedInvocationMatcher(const std::function<bool(arglist &...)>& match)
+        UserDefinedInvocationMatcher(const brstd::function<bool(arglist &...)>& match)
                 : matcher{match} {
         }
 
@@ -7065,7 +7065,7 @@ namespace fakeit {
             return TupleDispatcher::invoke<bool, typename tuple_arg<arglist>::type...>(matcher, actualArguments);
         }
 
-        const std::function<bool(arglist &...)> matcher;
+        const brstd::function<bool(arglist &...)> matcher;
     };
 
     template<typename ... arglist>
@@ -7220,7 +7220,7 @@ namespace fakeit {
             throw e;
         }
 
-        void scanActualInvocations(const std::function<void(ActualInvocation<arglist...> &)> &scanner) {
+        void scanActualInvocations(const brstd::function<void(ActualInvocation<arglist...> &)> &scanner) {
             for (auto destructablePtr : _actualInvocations) {
                 ActualInvocation<arglist...> &invocation = asActualInvocation(*destructablePtr);
                 scanner(invocation);
@@ -7242,11 +7242,11 @@ namespace fakeit {
     };
 
 }
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <type_traits>
 #include <stdexcept>
 #include <utility>
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <type_traits>
 
 namespace fakeit {
@@ -7322,7 +7322,7 @@ namespace fakeit {
 #endif
 
 }
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <atomic>
 #include <tuple>
 #include <type_traits>
@@ -7341,11 +7341,11 @@ namespace fakeit {
     struct Repeat : Action<R, arglist...> {
         virtual ~Repeat() = default;
 
-        Repeat(std::function<R(typename fakeit::test_arg<arglist>::type...)> func) :
+        Repeat(brstd::function<R(typename fakeit::test_arg<arglist>::type...)> func) :
                 f(func), times(1) {
         }
 
-        Repeat(std::function<R(typename fakeit::test_arg<arglist>::type...)> func, long t) :
+        Repeat(brstd::function<R(typename fakeit::test_arg<arglist>::type...)> func, long t) :
                 f(func), times(t) {
         }
 
@@ -7359,7 +7359,7 @@ namespace fakeit {
         }
 
     private:
-        std::function<R(typename fakeit::test_arg<arglist>::type...)> f;
+        brstd::function<R(typename fakeit::test_arg<arglist>::type...)> f;
         long times;
     };
 
@@ -7368,7 +7368,7 @@ namespace fakeit {
 
         virtual ~RepeatForever() = default;
 
-        RepeatForever(std::function<R(typename fakeit::test_arg<arglist>::type...)> func) :
+        RepeatForever(brstd::function<R(typename fakeit::test_arg<arglist>::type...)> func) :
                 f(func) {
         }
 
@@ -7381,7 +7381,7 @@ namespace fakeit {
         }
 
     private:
-        std::function<R(typename fakeit::test_arg<arglist>::type...)> f;
+        brstd::function<R(typename fakeit::test_arg<arglist>::type...)> f;
     };
 
     template<typename R, typename ... arglist>
@@ -7400,7 +7400,7 @@ namespace fakeit {
     template<typename R, typename ... arglist>
     struct ReturnDelegateValue : public Action<R, arglist...> {
 
-        ReturnDelegateValue(std::function<R(const typename fakeit::test_arg<arglist>::type...)> delegate) : _delegate(delegate) { }
+        ReturnDelegateValue(brstd::function<R(const typename fakeit::test_arg<arglist>::type...)> delegate) : _delegate(delegate) { }
 
         virtual ~ReturnDelegateValue() = default;
 
@@ -7413,7 +7413,7 @@ namespace fakeit {
         }
 
     private:
-        std::function<R(const typename fakeit::test_arg<arglist>::type...)> _delegate;
+        brstd::function<R(const typename fakeit::test_arg<arglist>::type...)> _delegate;
     };
 
 }
@@ -7540,7 +7540,7 @@ namespace fakeit {
         }
 
         virtual MethodStubbingProgress<R, arglist...> &
-            Do(std::function<R(const typename fakeit::test_arg<arglist>::type...)> method) {
+            Do(brstd::function<R(const typename fakeit::test_arg<arglist>::type...)> method) {
             return DoImpl(new Repeat<R, arglist...>(method));
         }
 
@@ -7557,7 +7557,7 @@ namespace fakeit {
             return Do(s, t...);
         }
 
-        virtual void AlwaysDo(std::function<R(const typename fakeit::test_arg<arglist>::type...)> method) {
+        virtual void AlwaysDo(brstd::function<R(const typename fakeit::test_arg<arglist>::type...)> method) {
             DoImpl(new RepeatForever<R, arglist...>(method));
         }
 
@@ -7572,7 +7572,7 @@ namespace fakeit {
 #if __cplusplus >= 201402L
         auto
 #else
-        std::function<R (typename fakeit::test_arg<arglist>::type...)>
+        brstd::function<R (typename fakeit::test_arg<arglist>::type...)>
 #endif
         GetAssigner(R &&r, valuelist &&... arg_vals) {
             class Lambda {
@@ -7597,7 +7597,7 @@ namespace fakeit {
 #if __cplusplus >= 201402L
         auto
 #else
-        std::function<R (typename fakeit::test_arg<arglist>::type...)>
+        brstd::function<R (typename fakeit::test_arg<arglist>::type...)>
 #endif
         GetAssigner(R &&r, helper::ArgValue<T, N>... arg_vals) {
             class Lambda {
@@ -7637,7 +7637,7 @@ namespace fakeit {
         }
 
         virtual MethodStubbingProgress<void, arglist...> &Do(
-            std::function<void(const typename fakeit::test_arg<arglist>::type...)> method) {
+            brstd::function<void(const typename fakeit::test_arg<arglist>::type...)> method) {
             return DoImpl(new Repeat<void, arglist...>(method));
         }
 
@@ -7701,7 +7701,7 @@ namespace fakeit {
             return Do(s, t...);
         }
 
-        virtual void AlwaysDo(std::function<void(const typename fakeit::test_arg<arglist>::type...)> method) {
+        virtual void AlwaysDo(brstd::function<void(const typename fakeit::test_arg<arglist>::type...)> method) {
             DoImpl(new RepeatForever<void, arglist...>(method));
         }
 
@@ -7716,7 +7716,7 @@ namespace fakeit {
 #if __cplusplus >= 201402L
         auto
 #else
-        std::function<void (typename fakeit::test_arg<arglist>::type...)>
+        brstd::function<void (typename fakeit::test_arg<arglist>::type...)>
 #endif
         GetAssigner(valuelist &&... arg_vals) {
             class Lambda {
@@ -7740,7 +7740,7 @@ namespace fakeit {
 #if __cplusplus >= 201402L
         auto
 #else
-        std::function<void (typename fakeit::test_arg<arglist>::type...)>
+        brstd::function<void (typename fakeit::test_arg<arglist>::type...)>
 #endif
         GetAssigner(helper::ArgValue<T, N>... arg_vals) {
             class Lambda {
@@ -7900,20 +7900,20 @@ namespace fakeit {
     using placeholders::operator <=;
 }
 #include <vector>
-#include <functional>
+#include <Platform/brstd/functional.h>
 
 namespace fakeit {
 
     class Finally {
     private:
-        std::function<void()> _finallyClause;
+        brstd::function<void()> _finallyClause;
 
         Finally(const Finally &);
 
         Finally &operator=(const Finally &);
 
     public:
-        explicit Finally(std::function<void()> f) :
+        explicit Finally(brstd::function<void()> f) :
                 _finallyClause(f) {
         }
 
@@ -7942,7 +7942,7 @@ namespace fakeit {
             std::shared_ptr<Destructible> destructablePtr = _recordedActions.front();
             Destructible &destructable = *destructablePtr;
             Action<R, arglist...> &action = dynamic_cast<Action<R, arglist...> &>(destructable);
-            std::function<void()> finallyClause = [&]() -> void {
+            brstd::function<void()> finallyClause = [&]() -> void {
                 if (action.isDone())
                 {
                     _recordedActions.erase(_recordedActions.begin());
@@ -8006,7 +8006,7 @@ namespace fakeit {
     };
 
 }
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <utility>
 #include <type_traits>
 #include <tuple>
@@ -8030,8 +8030,8 @@ namespace fakeit {
     struct SpyingContext : Xaction {
         virtual void appendAction(Action<R, arglist...> *action) = 0;
 
-        virtual std::function<R(arglist&...)> getOriginalMethodCopyArgs() = 0;
-        virtual std::function<R(arglist&...)> getOriginalMethodForwardArgs() = 0;
+        virtual brstd::function<R(arglist&...)> getOriginalMethodCopyArgs() = 0;
+        virtual brstd::function<R(arglist&...)> getOriginalMethodForwardArgs() = 0;
     };
 }
 namespace fakeit {
@@ -8042,7 +8042,7 @@ namespace fakeit {
         virtual void appendAction(Action<R, arglist...> *action) = 0;
     };
 }
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <type_traits>
 #include <tuple>
 #include <memory>
@@ -8131,15 +8131,15 @@ namespace fakeit {
         struct Context : Destructible {
 
 
-            virtual typename std::function<R(arglist&...)> getOriginalMethodCopyArgs() = 0;
-            virtual typename std::function<R(arglist&...)> getOriginalMethodForwardArgs() = 0;
+            virtual typename brstd::function<R(arglist&...)> getOriginalMethodCopyArgs() = 0;
+            virtual typename brstd::function<R(arglist&...)> getOriginalMethodForwardArgs() = 0;
 
             virtual std::string getMethodName() = 0;
 
             virtual void addMethodInvocationHandler(typename ActualInvocation<arglist...>::Matcher *matcher,
                 ActualInvocationHandler<R, arglist...> *invocationHandler) = 0;
 
-            virtual void scanActualInvocations(const std::function<void(ActualInvocation<arglist...> &)> &scanner) = 0;
+            virtual void scanActualInvocations(const brstd::function<void(ActualInvocation<arglist...> &)> &scanner) = 0;
 
             virtual void setMethodDetails(std::string mockName, std::string methodName) = 0;
 
@@ -8218,7 +8218,7 @@ namespace fakeit {
                 getRecordedActionSequence().AppendDo(action);
             }
 
-            void setMethodBodyByAssignment(std::function<R(const typename fakeit::test_arg<arglist>::type...)> method) {
+            void setMethodBodyByAssignment(brstd::function<R(const typename fakeit::test_arg<arglist>::type...)> method) {
                 appendAction(new RepeatForever<R, arglist...>(method));
                 commit();
             }
@@ -8231,11 +8231,11 @@ namespace fakeit {
                 into.push_back(&getStubbingContext().getInvolvedMock());
             }
 
-            typename std::function<R(arglist &...)> getOriginalMethodCopyArgs() {
+            typename brstd::function<R(arglist &...)> getOriginalMethodCopyArgs() {
                 return getStubbingContext().getOriginalMethodCopyArgs();
             }
 
-            typename std::function<R(arglist &...)> getOriginalMethodForwardArgs() {
+            typename brstd::function<R(arglist &...)> getOriginalMethodForwardArgs() {
                 return getStubbingContext().getOriginalMethodForwardArgs();
             }
 
@@ -8298,7 +8298,7 @@ namespace fakeit {
             _impl->setMethodDetails(mockName, methodName);
         }
 
-        void setMatchingCriteria(const std::function<bool(arglist &...)>& predicate) {
+        void setMatchingCriteria(const brstd::function<bool(arglist &...)>& predicate) {
             typename ActualInvocation<arglist...>::Matcher *matcher{
                     new UserDefinedInvocationMatcher<arglist...>(predicate)};
             _impl->setInvocationMatcher(matcher);
@@ -8315,7 +8315,7 @@ namespace fakeit {
             _impl->appendAction(action);
         }
 
-        void setMethodBodyByAssignment(std::function<R(const typename fakeit::test_arg<arglist>::type...)> method) {
+        void setMethodBodyByAssignment(brstd::function<R(const typename fakeit::test_arg<arglist>::type...)> method) {
             _impl->setMethodBodyByAssignment(method);
         }
 
@@ -8333,11 +8333,11 @@ namespace fakeit {
 
     private:
 
-        typename std::function<R(arglist&...)> getOriginalMethodCopyArgs() override {
+        typename brstd::function<R(arglist&...)> getOriginalMethodCopyArgs() override {
             return _impl->getOriginalMethodCopyArgs();
         }
 
-        typename std::function<R(arglist&...)> getOriginalMethodForwardArgs() override {
+        typename brstd::function<R(arglist&...)> getOriginalMethodForwardArgs() override {
             return _impl->getOriginalMethodForwardArgs();
         }
 
@@ -8372,7 +8372,7 @@ namespace fakeit {
             return *this;
         }
 
-        MockingContext<R, arglist...> &Matching(const std::function<bool(arglist &...)>& matcher) {
+        MockingContext<R, arglist...> &Matching(const brstd::function<bool(arglist &...)>& matcher) {
             MethodMockingContext<R, arglist...>::setMatchingCriteria(matcher);
             return *this;
         }
@@ -8382,12 +8382,12 @@ namespace fakeit {
             return *this;
         }
 
-        MockingContext<R, arglist...> &operator()(const std::function<bool(arglist &...)>& matcher) {
+        MockingContext<R, arglist...> &operator()(const brstd::function<bool(arglist &...)>& matcher) {
             MethodMockingContext<R, arglist...>::setMatchingCriteria(matcher);
             return *this;
         }
 
-        void operator=(std::function<R(arglist &...)> method) {
+        void operator=(brstd::function<R(arglist &...)> method) {
             MethodMockingContext<R, arglist...>::setMethodBodyByAssignment(method);
         }
 
@@ -8432,7 +8432,7 @@ namespace fakeit {
             return *this;
         }
 
-        MockingContext<void, arglist...> &Matching(const std::function<bool(arglist &...)>& matcher) {
+        MockingContext<void, arglist...> &Matching(const brstd::function<bool(arglist &...)>& matcher) {
             MethodMockingContext<void, arglist...>::setMatchingCriteria(matcher);
             return *this;
         }
@@ -8442,12 +8442,12 @@ namespace fakeit {
             return *this;
         }
 
-        MockingContext<void, arglist...> &operator()(const std::function<bool(arglist &...)>& matcher) {
+        MockingContext<void, arglist...> &operator()(const brstd::function<bool(arglist &...)>& matcher) {
             MethodMockingContext<void, arglist...>::setMatchingCriteria(matcher);
             return *this;
         }
 
-        void operator=(std::function<void(arglist &...)> method) {
+        void operator=(brstd::function<void(arglist &...)> method) {
             MethodMockingContext<void, arglist...>::setMethodBodyByAssignment(method);
         }
 
@@ -8466,7 +8466,7 @@ namespace fakeit {
         DtorMockingContext(DtorMockingContext &&other) : MethodMockingContext<void>(std::move(other)) {
         }
 
-        void operator=(std::function<void()> method) {
+        void operator=(brstd::function<void()> method) {
             MethodMockingContext<void>::setMethodBodyByAssignment(method);
         }
 
@@ -8601,7 +8601,7 @@ namespace fakeit {
                 getRecordedMethodBody().addMethodInvocationHandler(matcher, invocationHandler);
             }
 
-            void scanActualInvocations(const std::function<void(ActualInvocation<arglist...> &)> &scanner) {
+            void scanActualInvocations(const brstd::function<void(ActualInvocation<arglist...> &)> &scanner) {
                 getRecordedMethodBody().scanActualInvocations(scanner);
             }
 
@@ -8637,7 +8637,7 @@ namespace fakeit {
             }
 
             template<typename ... T, typename std::enable_if<all_true<smart_is_copy_constructible<T>::value...>::value, int>::type = 0>
-            std::function<R(arglist&...)> getOriginalMethodCopyArgsInternal(int) {
+            brstd::function<R(arglist&...)> getOriginalMethodCopyArgsInternal(int) {
                 void *mPtr = MethodMockingContextBase<R, arglist...>::_mock.getOriginalMethod(_vMethod);
                 C * instance = &(MethodMockingContextBase<R, arglist...>::_mock.get());
                 return [=](arglist&... args) -> R {
@@ -8648,16 +8648,16 @@ namespace fakeit {
 
 
             template<typename ... T>
-            [[noreturn]] std::function<R(arglist&...)> getOriginalMethodCopyArgsInternal(long) {
+            [[noreturn]] brstd::function<R(arglist&...)> getOriginalMethodCopyArgsInternal(long) {
                 std::abort();
             }
 
 
-            std::function<R(arglist&...)> getOriginalMethodCopyArgs() override {
+            brstd::function<R(arglist&...)> getOriginalMethodCopyArgs() override {
                 return getOriginalMethodCopyArgsInternal<arglist...>(0);
             }
 
-            std::function<R(arglist&...)> getOriginalMethodForwardArgs() override {
+            brstd::function<R(arglist&...)> getOriginalMethodForwardArgs() override {
                 void *mPtr = MethodMockingContextBase<R, arglist...>::_mock.getOriginalMethod(_vMethod);
                 C * instance = &(MethodMockingContextBase<R, arglist...>::_mock.get());
                 return [=](arglist&... args) -> R {
@@ -8701,12 +8701,12 @@ namespace fakeit {
                     : MethodMockingContextBase<void>(mock) {
             }
 
-            std::function<void()> getOriginalMethodCopyArgs() override {
+            brstd::function<void()> getOriginalMethodCopyArgs() override {
                 return [=]() -> void {
                 };
             }
 
-            std::function<void()> getOriginalMethodForwardArgs() override {
+            brstd::function<void()> getOriginalMethodForwardArgs() override {
                 return [=]() -> void {
                 };
             }

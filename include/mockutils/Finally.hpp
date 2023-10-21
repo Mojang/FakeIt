@@ -8,20 +8,20 @@
  */
 #pragma once
 
-#include <functional>
+#include <Platform/brstd/functional.h>
 
 namespace fakeit {
 
     class Finally {
     private:
-        std::function<void()> _finallyClause;
+        brstd::function<void()> _finallyClause;
 
         Finally(const Finally &);
 
         Finally &operator=(const Finally &);
 
     public:
-        explicit Finally(std::function<void()> f) :
+        explicit Finally(brstd::function<void()> f) :
                 _finallyClause(f) {
         }
 

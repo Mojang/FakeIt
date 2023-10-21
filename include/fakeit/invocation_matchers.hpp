@@ -8,7 +8,7 @@
  */
 #pragma once
 
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <tuple>
 #include <string>
 #include <iosfwd>
@@ -120,7 +120,7 @@ namespace fakeit {
     struct UserDefinedInvocationMatcher : ActualInvocation<arglist...>::Matcher {
         virtual ~UserDefinedInvocationMatcher() = default;
 
-        UserDefinedInvocationMatcher(const std::function<bool(arglist &...)>& match)
+        UserDefinedInvocationMatcher(const brstd::function<bool(arglist &...)>& match)
                 : matcher{match} {
         }
 
@@ -139,7 +139,7 @@ namespace fakeit {
             return TupleDispatcher::invoke<bool, typename tuple_arg<arglist>::type...>(matcher, actualArguments);
         }
 
-        const std::function<bool(arglist &...)> matcher;
+        const brstd::function<bool(arglist &...)> matcher;
     };
 
     template<typename ... arglist>

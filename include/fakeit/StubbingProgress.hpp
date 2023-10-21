@@ -7,7 +7,7 @@
  */
 #pragma once
 
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <type_traits>
 #include <stdexcept>
 #include <utility>
@@ -143,7 +143,7 @@ namespace fakeit {
         }
 
         virtual MethodStubbingProgress<R, arglist...> &
-            Do(std::function<R(const typename fakeit::test_arg<arglist>::type...)> method) {
+            Do(brstd::function<R(const typename fakeit::test_arg<arglist>::type...)> method) {
             return DoImpl(new Repeat<R, arglist...>(method));
         }
 
@@ -160,7 +160,7 @@ namespace fakeit {
             return Do(s, t...);
         }
 
-        virtual void AlwaysDo(std::function<R(const typename fakeit::test_arg<arglist>::type...)> method) {
+        virtual void AlwaysDo(brstd::function<R(const typename fakeit::test_arg<arglist>::type...)> method) {
             DoImpl(new RepeatForever<R, arglist...>(method));
         }
 
@@ -175,7 +175,7 @@ namespace fakeit {
 #if __cplusplus >= 201402L
         auto
 #else
-        std::function<R (typename fakeit::test_arg<arglist>::type...)>
+        brstd::function<R (typename fakeit::test_arg<arglist>::type...)>
 #endif
         GetAssigner(R &&r, valuelist &&... arg_vals) {
             class Lambda {
@@ -200,7 +200,7 @@ namespace fakeit {
 #if __cplusplus >= 201402L
         auto
 #else
-        std::function<R (typename fakeit::test_arg<arglist>::type...)>
+        brstd::function<R (typename fakeit::test_arg<arglist>::type...)>
 #endif
         GetAssigner(R &&r, helper::ArgValue<T, N>... arg_vals) {
             class Lambda {
@@ -240,7 +240,7 @@ namespace fakeit {
         }
 
         virtual MethodStubbingProgress<void, arglist...> &Do(
-            std::function<void(const typename fakeit::test_arg<arglist>::type...)> method) {
+            brstd::function<void(const typename fakeit::test_arg<arglist>::type...)> method) {
             return DoImpl(new Repeat<void, arglist...>(method));
         }
 
@@ -304,7 +304,7 @@ namespace fakeit {
             return Do(s, t...);
         }
 
-        virtual void AlwaysDo(std::function<void(const typename fakeit::test_arg<arglist>::type...)> method) {
+        virtual void AlwaysDo(brstd::function<void(const typename fakeit::test_arg<arglist>::type...)> method) {
             DoImpl(new RepeatForever<void, arglist...>(method));
         }
 
@@ -319,7 +319,7 @@ namespace fakeit {
 #if __cplusplus >= 201402L
         auto
 #else
-        std::function<void (typename fakeit::test_arg<arglist>::type...)>
+        brstd::function<void (typename fakeit::test_arg<arglist>::type...)>
 #endif
         GetAssigner(valuelist &&... arg_vals) {
             class Lambda {
@@ -343,7 +343,7 @@ namespace fakeit {
 #if __cplusplus >= 201402L
         auto
 #else
-        std::function<void (typename fakeit::test_arg<arglist>::type...)>
+        brstd::function<void (typename fakeit::test_arg<arglist>::type...)>
 #endif
         GetAssigner(helper::ArgValue<T, N>... arg_vals) {
             class Lambda {

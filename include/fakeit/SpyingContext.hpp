@@ -18,7 +18,7 @@ namespace fakeit {
     struct SpyingContext : Xaction {
         virtual void appendAction(Action<R, arglist...> *action) = 0;
 
-        virtual std::function<R(arglist&...)> getOriginalMethodCopyArgs() = 0;
-        virtual std::function<R(arglist&...)> getOriginalMethodForwardArgs() = 0;
+        virtual brstd::function<R(arglist&...)> getOriginalMethodCopyArgs() = 0;
+        virtual brstd::function<R(arglist&...)> getOriginalMethodForwardArgs() = 0;
     };
 }

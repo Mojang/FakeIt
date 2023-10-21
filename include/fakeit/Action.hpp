@@ -8,7 +8,7 @@
  */
 #pragma once
 
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <atomic>
 #include <tuple>
 #include <type_traits>
@@ -32,11 +32,11 @@ namespace fakeit {
     struct Repeat : Action<R, arglist...> {
         virtual ~Repeat() = default;
 
-        Repeat(std::function<R(typename fakeit::test_arg<arglist>::type...)> func) :
+        Repeat(brstd::function<R(typename fakeit::test_arg<arglist>::type...)> func) :
                 f(func), times(1) {
         }
 
-        Repeat(std::function<R(typename fakeit::test_arg<arglist>::type...)> func, long t) :
+        Repeat(brstd::function<R(typename fakeit::test_arg<arglist>::type...)> func, long t) :
                 f(func), times(t) {
         }
 
@@ -50,7 +50,7 @@ namespace fakeit {
         }
 
     private:
-        std::function<R(typename fakeit::test_arg<arglist>::type...)> f;
+        brstd::function<R(typename fakeit::test_arg<arglist>::type...)> f;
         long times;
     };
 
@@ -59,7 +59,7 @@ namespace fakeit {
 
         virtual ~RepeatForever() = default;
 
-        RepeatForever(std::function<R(typename fakeit::test_arg<arglist>::type...)> func) :
+        RepeatForever(brstd::function<R(typename fakeit::test_arg<arglist>::type...)> func) :
                 f(func) {
         }
 
@@ -72,7 +72,7 @@ namespace fakeit {
         }
 
     private:
-        std::function<R(typename fakeit::test_arg<arglist>::type...)> f;
+        brstd::function<R(typename fakeit::test_arg<arglist>::type...)> f;
     };
 
     template<typename R, typename ... arglist>
@@ -91,7 +91,7 @@ namespace fakeit {
     template<typename R, typename ... arglist>
     struct ReturnDelegateValue : public Action<R, arglist...> {
 
-        ReturnDelegateValue(std::function<R(const typename fakeit::test_arg<arglist>::type...)> delegate) : _delegate(delegate) { }
+        ReturnDelegateValue(brstd::function<R(const typename fakeit::test_arg<arglist>::type...)> delegate) : _delegate(delegate) { }
 
         virtual ~ReturnDelegateValue() = default;
 
@@ -104,7 +104,7 @@ namespace fakeit {
         }
 
     private:
-        std::function<R(const typename fakeit::test_arg<arglist>::type...)> _delegate;
+        brstd::function<R(const typename fakeit::test_arg<arglist>::type...)> _delegate;
     };
 
 }

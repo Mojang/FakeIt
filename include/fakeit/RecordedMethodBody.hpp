@@ -8,7 +8,7 @@
 #pragma once
 
 #include <vector>
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <tuple>
 
 #include "mockutils/TupleDispatcher.hpp"
@@ -149,7 +149,7 @@ namespace fakeit {
             throw e;
         }
 
-        void scanActualInvocations(const std::function<void(ActualInvocation<arglist...> &)> &scanner) {
+        void scanActualInvocations(const brstd::function<void(ActualInvocation<arglist...> &)> &scanner) {
             for (auto destructablePtr : _actualInvocations) {
                 ActualInvocation<arglist...> &invocation = asActualInvocation(*destructablePtr);
                 scanner(invocation);

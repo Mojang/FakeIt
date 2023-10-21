@@ -87,11 +87,11 @@ struct CustomTestingFramework: tpunit::TestFixture {
 
 	class finally {
 	private:
-		std::function<void()> finallyClause;
+		brstd::function<void()> finallyClause;
 		finally(const finally &);
 		finally& operator=(const finally &);
 	public:
-		explicit finally(std::function<void()> f)
+		explicit finally(brstd::function<void()> f)
 				: finallyClause(f) {
 		}
 

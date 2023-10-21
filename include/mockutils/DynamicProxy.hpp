@@ -8,7 +8,7 @@
 #pragma once
 
 #undef max
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <type_traits>
 #include <vector>
 #include <array>

@@ -8,7 +8,7 @@
  */
 #pragma once
 
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <type_traits>
 #include "mockutils/VirtualOffestSelector.hpp"
 #include "mockutils/union_cast.hpp"

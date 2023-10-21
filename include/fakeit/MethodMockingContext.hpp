@@ -7,7 +7,7 @@
  */
 #pragma once
 
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <utility>
 #include <type_traits>
 #include <tuple>
@@ -52,15 +52,15 @@ namespace fakeit {
             /**
              * Return the original method. not the mock.
              */
-            virtual typename std::function<R(arglist&...)> getOriginalMethodCopyArgs() = 0;
-            virtual typename std::function<R(arglist&...)> getOriginalMethodForwardArgs() = 0;
+            virtual typename brstd::function<R(arglist&...)> getOriginalMethodCopyArgs() = 0;
+            virtual typename brstd::function<R(arglist&...)> getOriginalMethodForwardArgs() = 0;
 
             virtual std::string getMethodName() = 0;
 
             virtual void addMethodInvocationHandler(typename ActualInvocation<arglist...>::Matcher *matcher,
                 ActualInvocationHandler<R, arglist...> *invocationHandler) = 0;
 
-            virtual void scanActualInvocations(const std::function<void(ActualInvocation<arglist...> &)> &scanner) = 0;
+            virtual void scanActualInvocations(const brstd::function<void(ActualInvocation<arglist...> &)> &scanner) = 0;
 
             virtual void setMethodDetails(std::string mockName, std::string methodName) = 0;
 
@@ -141,7 +141,7 @@ namespace fakeit {
                 getRecordedActionSequence().AppendDo(action);
             }
 
-            void setMethodBodyByAssignment(std::function<R(const typename fakeit::test_arg<arglist>::type...)> method) {
+            void setMethodBodyByAssignment(brstd::function<R(const typename fakeit::test_arg<arglist>::type...)> method) {
                 appendAction(new RepeatForever<R, arglist...>(method));
                 commit();
             }
@@ -154,11 +154,11 @@ namespace fakeit {
                 into.push_back(&getStubbingContext().getInvolvedMock());
             }
 
-            typename std::function<R(arglist &...)> getOriginalMethodCopyArgs() {
+            typename brstd::function<R(arglist &...)> getOriginalMethodCopyArgs() {
                 return getStubbingContext().getOriginalMethodCopyArgs();
             }
 
-            typename std::function<R(arglist &...)> getOriginalMethodForwardArgs() {
+            typename brstd::function<R(arglist &...)> getOriginalMethodForwardArgs() {
                 return getStubbingContext().getOriginalMethodForwardArgs();
             }
 
@@ -227,7 +227,7 @@ namespace fakeit {
             _impl->setMethodDetails(mockName, methodName);
         }
 
-        void setMatchingCriteria(const std::function<bool(arglist &...)>& predicate) {
+        void setMatchingCriteria(const brstd::function<bool(arglist &...)>& predicate) {
             typename ActualInvocation<arglist...>::Matcher *matcher{
                     new UserDefinedInvocationMatcher<arglist...>(predicate)};
             _impl->setInvocationMatcher(matcher);
@@ -246,7 +246,7 @@ namespace fakeit {
             _impl->appendAction(action);
         }
 
-        void setMethodBodyByAssignment(std::function<R(const typename fakeit::test_arg<arglist>::type...)> method) {
+        void setMethodBodyByAssignment(brstd::function<R(const typename fakeit::test_arg<arglist>::type...)> method) {
             _impl->setMethodBodyByAssignment(method);
         }
 
@@ -264,11 +264,11 @@ namespace fakeit {
 
     private:
 
-        typename std::function<R(arglist&...)> getOriginalMethodCopyArgs() override {
+        typename brstd::function<R(arglist&...)> getOriginalMethodCopyArgs() override {
             return _impl->getOriginalMethodCopyArgs();
         }
 
-        typename std::function<R(arglist&...)> getOriginalMethodForwardArgs() override {
+        typename brstd::function<R(arglist&...)> getOriginalMethodForwardArgs() override {
             return _impl->getOriginalMethodForwardArgs();
         }
 
@@ -303,7 +303,7 @@ namespace fakeit {
             return *this;
         }
 
-        MockingContext<R, arglist...> &Matching(const std::function<bool(arglist &...)>& matcher) {
+        MockingContext<R, arglist...> &Matching(const brstd::function<bool(arglist &...)>& matcher) {
             MethodMockingContext<R, arglist...>::setMatchingCriteria(matcher);
             return *this;
         }
@@ -313,12 +313,12 @@ namespace fakeit {
             return *this;
         }
 
-        MockingContext<R, arglist...> &operator()(const std::function<bool(arglist &...)>& matcher) {
+        MockingContext<R, arglist...> &operator()(const brstd::function<bool(arglist &...)>& matcher) {
             MethodMockingContext<R, arglist...>::setMatchingCriteria(matcher);
             return *this;
         }
 
-        void operator=(std::function<R(arglist &...)> method) {
+        void operator=(brstd::function<R(arglist &...)> method) {
             MethodMockingContext<R, arglist...>::setMethodBodyByAssignment(method);
         }
 
@@ -363,7 +363,7 @@ namespace fakeit {
             return *this;
         }
 
-        MockingContext<void, arglist...> &Matching(const std::function<bool(arglist &...)>& matcher) {
+        MockingContext<void, arglist...> &Matching(const brstd::function<bool(arglist &...)>& matcher) {
             MethodMockingContext<void, arglist...>::setMatchingCriteria(matcher);
             return *this;
         }
@@ -373,12 +373,12 @@ namespace fakeit {
             return *this;
         }
 
-        MockingContext<void, arglist...> &operator()(const std::function<bool(arglist &...)>& matcher) {
+        MockingContext<void, arglist...> &operator()(const brstd::function<bool(arglist &...)>& matcher) {
             MethodMockingContext<void, arglist...>::setMatchingCriteria(matcher);
             return *this;
         }
 
-        void operator=(std::function<void(arglist &...)> method) {
+        void operator=(brstd::function<void(arglist &...)> method) {
             MethodMockingContext<void, arglist...>::setMethodBodyByAssignment(method);
         }
 
@@ -397,7 +397,7 @@ namespace fakeit {
         DtorMockingContext(DtorMockingContext &&other) : MethodMockingContext<void>(std::move(other)) {
         }
 
-        void operator=(std::function<void()> method) {
+        void operator=(brstd::function<void()> method) {
             MethodMockingContext<void>::setMethodBodyByAssignment(method);
         }
 

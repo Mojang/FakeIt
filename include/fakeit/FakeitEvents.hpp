@@ -7,7 +7,7 @@
  */
 #pragma once
 
-#include <functional>
+#include <Platform/brstd/functional.h>
 #include <memory>
 
 #include "fakeit/Sequence.hpp"

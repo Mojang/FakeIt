@@ -145,7 +145,7 @@ namespace fakeit {
                 getRecordedMethodBody().addMethodInvocationHandler(matcher, invocationHandler);
             }
 
-            void scanActualInvocations(const std::function<void(ActualInvocation<arglist...> &)> &scanner) {
+            void scanActualInvocations(const brstd::function<void(ActualInvocation<arglist...> &)> &scanner) {
                 getRecordedMethodBody().scanActualInvocations(scanner);
             }
 
@@ -181,7 +181,7 @@ namespace fakeit {
             }
 
             template<typename ... T, typename std::enable_if<all_true<smart_is_copy_constructible<T>::value...>::value, int>::type = 0>
-            std::function<R(arglist&...)> getOriginalMethodCopyArgsInternal(int) {
+            brstd::function<R(arglist&...)> getOriginalMethodCopyArgsInternal(int) {
                 void *mPtr = MethodMockingContextBase<R, arglist...>::_mock.getOriginalMethod(_vMethod);
                 C * instance = &(MethodMockingContextBase<R, arglist...>::_mock.get());
                 return [=](arglist&... args) -> R {
@@ -192,16 +192,16 @@ namespace fakeit {
 
             /* LCOV_EXCL_START */
             template<typename ... T>
-            [[noreturn]] std::function<R(arglist&...)> getOriginalMethodCopyArgsInternal(long) {
+            [[noreturn]] brstd::function<R(arglist&...)> getOriginalMethodCopyArgsInternal(long) {
                 std::abort(); // Shouldn't ever be called, Spy() should static_assert an error before.
             }
             /* LCOV_EXCL_STOP */
 
-            std::function<R(arglist&...)> getOriginalMethodCopyArgs() override {
+            brstd::function<R(arglist&...)> getOriginalMethodCopyArgs() override {
                 return getOriginalMethodCopyArgsInternal<arglist...>(0);
             }
 
-            std::function<R(arglist&...)> getOriginalMethodForwardArgs() override {
+            brstd::function<R(arglist&...)> getOriginalMethodForwardArgs() override {
                 void *mPtr = MethodMockingContextBase<R, arglist...>::_mock.getOriginalMethod(_vMethod);
                 C * instance = &(MethodMockingContextBase<R, arglist...>::_mock.get());
                 return [=](arglist&... args) -> R {
@@ -245,12 +245,12 @@ namespace fakeit {
                     : MethodMockingContextBase<void>(mock) {
             }
 
-            std::function<void()> getOriginalMethodCopyArgs() override {
+            brstd::function<void()> getOriginalMethodCopyArgs() override {
                 return [=]() -> void {
                 };
             }
 
-            std::function<void()> getOriginalMethodForwardArgs() override {
+            brstd::function<void()> getOriginalMethodForwardArgs() override {
                 return [=]() -> void {
                 };
             }
