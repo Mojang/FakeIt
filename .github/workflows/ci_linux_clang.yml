@@ -10,7 +10,9 @@ defaults:
 
 jobs:
   clang-ubuntu-20-04:
-    runs-on: ubuntu-20.04
+    runs-on:
+      - self-hosted
+      - 1ES.Pool=MC-Runner-1ES-Linux
     steps:
       - uses: actions/checkout@v2
       - name: Build project
@@ -22,7 +24,9 @@ jobs:
           cd build
           ./fakeit_tests.exe
   clang-ubuntu-18-04:
-    runs-on: ubuntu-18.04
+    runs-on:
+      - self-hosted
+      - 1ES.Pool=MC-Runner-1ES-Linux
     steps:
       - uses: actions/checkout@v2
       - name: Build project
