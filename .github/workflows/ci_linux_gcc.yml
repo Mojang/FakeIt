@@ -10,7 +10,7 @@ defaults:
 
 jobs:
   coverage:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Install LCOV
         run: sudo apt install -y lcov
@@ -35,19 +35,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: ./build/report_filtered.info
   gcc-ubuntu-20-04:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build project
-        run: |
-          cd build
-          make all
-      - name: Run tests
-        run: |
-          cd build
-          ./fakeit_tests.exe
-  gcc-ubuntu-18-04:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
       - name: Build project
