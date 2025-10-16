@@ -34,7 +34,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: ./build/report_filtered.info
-  gcc-ubuntu-20-04:
+  gcc-ubuntu-22-04:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
