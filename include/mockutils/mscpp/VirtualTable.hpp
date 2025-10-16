@@ -220,8 +220,8 @@ namespace fakeit {
             C &cRef = *c;
             auto vt = VirtualTable<C, baseclasses...>::getVTable(cRef);
             void *dtorPtr = vt.getCookie(dtorCookieIndex);
-            void(*method)(C *) = reinterpret_cast<void (*)(C *)>(dtorPtr);
-            method(c);
+            void(C::*method)() = union_cast<void(C::*)()>(dtorPtr);
+            (cRef.*method)();
             return 0;
         }
 
