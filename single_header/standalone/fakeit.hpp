@@ -2,7 +2,7 @@
 /*
  *  FakeIt - A Simplified C++ Mocking Framework
  *  Copyright (c) Eran Pe'er 2013
- *  Generated: 2023-07-08 18:53:41.964544
+ *  Generated: 2025-10-15 20:40:55.295920
  *  Distributed under the MIT License. Please refer to the LICENSE file at:
  *  https://github.com/eranpeer/FakeIt
  */
@@ -5597,8 +5597,8 @@ namespace fakeit {
             C &cRef = *c;
             auto vt = VirtualTable<C, baseclasses...>::getVTable(cRef);
             void *dtorPtr = vt.getCookie(dtorCookieIndex);
-            void(*method)(C *) = reinterpret_cast<void (*)(C *)>(dtorPtr);
-            method(c);
+            void(C::*method)() = union_cast<void(C::*)()>(dtorPtr);
+            (cRef.*method)();
             return 0;
         }
 
