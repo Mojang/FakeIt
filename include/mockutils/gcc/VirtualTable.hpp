@@ -7,6 +7,8 @@
  */
 #pragma once
 
+#include "mockutils/Macros.hpp"
+
 #ifndef __clang__
 
 #include "mockutils/gcc/is_simple_inheritance_layout.hpp"
@@ -143,7 +145,9 @@ namespace fakeit {
             auto array = new void *[size + 2 + numOfCookies]{};
             array += numOfCookies; // skip cookies
             array++; // skip top_offset
+#if FAKEIT_HAS_RTTI
             array[0] = const_cast<std::type_info *>(&typeid(C)); // type_info
+#endif
             array++; // skip type_info ptr
             return array;
         }

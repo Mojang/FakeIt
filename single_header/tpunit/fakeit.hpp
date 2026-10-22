@@ -2,7 +2,7 @@
 /*
  *  FakeIt - A Simplified C++ Mocking Framework
  *  Copyright (c) Eran Pe'er 2013
- *  Generated: 2025-10-15 20:40:55.329457
+ *  Generated: 2026-10-22 12:52:08.670852
  *  Distributed under the MIT License. Please refer to the LICENSE file at:
  *  https://github.com/eranpeer/FakeIt
  */
@@ -24,12 +24,20 @@
 #define FAKEIT_THROWS throw(...)
 #define FAKEIT_NO_THROWS
 #endif
+
+
+#if defined (__GXX_RTTI) || defined (_CPPRTTI)
+#define FAKEIT_HAS_RTTI 1
+#else
+#define FAKEIT_HAS_RTTI 0
+#endif
 #include <typeinfo>
 #include <unordered_set>
 #include <tuple>
 #include <string>
 #include <iosfwd>
 #include <atomic>
+#include <string>
 #include <tuple>
 
 
@@ -47,6 +55,30 @@ namespace fakeit {
     struct naked_type {
         typedef typename std::remove_cv<typename std::remove_reference<C>::type>::type type;
     };
+
+    template<typename T>
+    const char *type_signature() {
+#if defined(_MSC_VER) && !defined(__clang__)
+        return __FUNCSIG__;
+#else
+        return __PRETTY_FUNCTION__;
+#endif
+    }
+
+
+    template<typename T>
+    std::string type_name() {
+        const std::string signature = type_signature<T>();
+#if defined(_MSC_VER) && !defined(__clang__)
+        const std::string prefix = "type_signature<";
+        const std::string::size_type end = signature.rfind(">(void)");
+#else
+        const std::string prefix = "T = ";
+        const std::string::size_type end = signature.rfind(']');
+#endif
+        const std::string::size_type begin = signature.find(prefix) + prefix.size();
+        return signature.substr(begin, end - begin);
+    }
 
     template< class T > struct tuple_arg         { typedef T  type; };
     template< class T > struct tuple_arg < T& >  { typedef T& type; };
@@ -412,11 +444,6 @@ namespace fakeit {
     }
 
 }
-
-
-
-
-
 #include <unordered_set>
 
 namespace fakeit {
@@ -499,6 +526,9 @@ namespace fakeit {
 
 namespace fakeit {
 
+    class ConcatenatedSequence;
+    class RepeatedSequence;
+
     class Sequence {
     private:
 
@@ -519,6 +549,14 @@ namespace fakeit {
         virtual void getInvolvedMocks(std::vector<ActualInvocationsSource *> &into) const = 0;
 
         virtual unsigned int size() const = 0;
+
+        virtual const ConcatenatedSequence *asConcatenatedSequence() const {
+            return nullptr;
+        }
+
+        virtual const RepeatedSequence *asRepeatedSequence() const {
+            return nullptr;
+        }
 
         friend class VerifyFunctor;
     };
@@ -560,6 +598,10 @@ namespace fakeit {
             s2.getInvolvedMocks(into);
         }
 
+        const ConcatenatedSequence *asConcatenatedSequence() const override {
+            return this;
+        }
+
         friend inline ConcatenatedSequence operator+(const Sequence &s1, const Sequence &s2);
     };
 
@@ -593,6 +635,10 @@ namespace fakeit {
         void getExpectedSequence(std::vector<Invocation::Matcher *> &into) const override {
             for (int i = 0; i < times; i++)
                 _s.getExpectedSequence(into);
+        }
+
+        const RepeatedSequence *asRepeatedSequence() const override {
+            return this;
         }
 
         int getTimes() const {
@@ -936,11 +982,11 @@ namespace fakeit {
     private:
 
         static std::string formatSequence(const Sequence &val) {
-            const ConcatenatedSequence *cs = dynamic_cast<const ConcatenatedSequence *>(&val);
+            const ConcatenatedSequence *cs = val.asConcatenatedSequence();
             if (cs) {
                 return format(*cs);
             }
-            const RepeatedSequence *rs = dynamic_cast<const RepeatedSequence *>(&val);
+            const RepeatedSequence *rs = val.asRepeatedSequence();
             if (rs) {
                 return format(*rs);
             }
@@ -987,8 +1033,8 @@ namespace fakeit {
 
         static std::string format(const RepeatedSequence &val) {
             std::ostringstream out;
-            const ConcatenatedSequence *cs = dynamic_cast<const ConcatenatedSequence *>(&val.getSequence());
-            const RepeatedSequence *rs = dynamic_cast<const RepeatedSequence *>(&val.getSequence());
+            const ConcatenatedSequence *cs = val.getSequence().asConcatenatedSequence();
+            const RepeatedSequence *rs = val.getSequence().asRepeatedSequence();
             if (rs || cs)
                 out << '(';
             out << formatSequence(val.getSequence());
@@ -1140,6 +1186,13 @@ namespace fakeit {
 #elif defined (_MSC_VER)
 #define FAKEIT_THROWS throw(...)
 #define FAKEIT_NO_THROWS
+#endif
+
+
+#if defined (__GXX_RTTI) || defined (_CPPRTTI)
+#define FAKEIT_HAS_RTTI 1
+#else
+#define FAKEIT_HAS_RTTI 0
 #endif
 #include <string>
 #include <sstream>
@@ -5363,6 +5416,7 @@ namespace fakeit {
 
     typedef unsigned long dword_;
 
+#if FAKEIT_HAS_RTTI
     struct TypeDescriptor {
         TypeDescriptor() :
                 ptrToVTable(0), spare(0) {
@@ -5481,6 +5535,7 @@ namespace fakeit {
 		struct RTTIClassHierarchyDescriptor<C, baseclasses...> *pClassDescriptor;
 #endif
 	};
+#endif
 
 
     struct VirtualTableBase {
@@ -5556,8 +5611,10 @@ namespace fakeit {
 
         void dispose() {
             _firstMethod--;
+#if FAKEIT_HAS_RTTI
             RTTICompleteObjectLocator<C, baseclasses...> *locator = (RTTICompleteObjectLocator<C, baseclasses...> *) _firstMethod[0];
             delete locator;
+#endif
             _firstMethod -= numOfCookies;
             delete[] _firstMethod;
         }
@@ -5614,10 +5671,10 @@ namespace fakeit {
         static void **buildVTArray() {
             auto vtSize = VTUtils::getVTSize<C>();
             auto array = new void *[vtSize + numOfCookies + 1]{};
-            RTTICompleteObjectLocator<C, baseclasses...> *objectLocator = new RTTICompleteObjectLocator<C, baseclasses...>(
-                    typeid(C));
             array += numOfCookies;
-            array[0] = objectLocator;
+#if FAKEIT_HAS_RTTI
+            array[0] = new RTTICompleteObjectLocator<C, baseclasses...>(typeid(C));
+#endif
             array++;
             return array;
         }
@@ -5786,7 +5843,9 @@ namespace fakeit {
             auto array = new void *[size + 2 + numOfCookies]{};
             array += numOfCookies;
             array++;
+#if FAKEIT_HAS_RTTI
             array[0] = const_cast<std::type_info *>(&typeid(C));
+#endif
             array++;
             return array;
         }
@@ -5802,8 +5861,12 @@ namespace fakeit {
     struct NoMoreRecordedActionException {
     };
 
+
+    struct MethodInvocationHandlerBase : Destructible, ActualInvocationsSource, ActualInvocationsContainer {
+    };
+
     template<typename R, typename ... arglist>
-    struct MethodInvocationHandler : Destructible {
+    struct MethodInvocationHandler : MethodInvocationHandlerBase {
         virtual R handleMethodInvocation(const typename fakeit::production_arg<arglist>::type... args) = 0;
     };
 
@@ -6089,9 +6152,8 @@ namespace fakeit {
         template<typename DataType>
         void getMethodMocks(std::vector<DataType> &into) const {
             for (std::shared_ptr<Destructible> ptr : _methodMocks) {
-                DataType p = dynamic_cast<DataType>(ptr.get());
-                if (p) {
-                    into.push_back(p);
+                if (ptr) {
+                    into.push_back(static_cast<MethodInvocationHandlerBase *>(ptr.get()));
                 }
             }
         }
@@ -6145,12 +6207,6 @@ namespace fakeit {
             getFake().setDtor(methodProxy.getProxy());
             _methodMocks[methodProxy.getOffset()].reset(invocationHandler);
             _offsets[methodProxy.getOffset()] = methodProxy.getId();
-        }
-
-        template<typename DataType>
-        DataType getMethodMock(unsigned int offset) {
-            std::shared_ptr<Destructible> ptr = _methodMocks[offset];
-            return dynamic_cast<DataType>(ptr.get());
         }
 
         template<typename BaseClass>
@@ -6260,7 +6316,6 @@ namespace fakeit {
 #include <string>
 #include <iosfwd>
 #include <type_traits>
-#include <typeinfo>
 
 namespace fakeit {
 
@@ -6293,7 +6348,7 @@ namespace fakeit {
                 virtual std::string what() const
 
                 override {
-                    return (std::string("Type ") + std::string(typeid(C).name())
+                    return (std::string("Type ") + type_name<C>()
                             + std::string(
                             " is not default constructible. Could not instantiate a default return value")).c_str();
                 }
@@ -7018,7 +7073,7 @@ namespace fakeit {
             out << "(";
             for (unsigned int i = 0; i < _matchers.size(); i++) {
                 if (i > 0) out << ", ";
-                IMatcher *m = dynamic_cast<IMatcher *>(_matchers[i]);
+                IMatcher *m = static_cast<IMatcher *>(_matchers[i]);
                 out << m->format();
             }
             out << ")";
@@ -7035,7 +7090,7 @@ namespace fakeit {
             template<typename A>
             void operator()(int index, A &actualArg) {
                 TypedMatcher<typename naked_type<A>::type> *matcher =
-                        dynamic_cast<TypedMatcher<typename naked_type<A>::type> *>(_matchers[index]);
+                        static_cast<TypedMatcher<typename naked_type<A>::type> *>(_matchers[index]);
                 if (_matching)
                     _matching = matcher->matches(actualArg);
             }
@@ -7144,7 +7199,7 @@ namespace fakeit {
 
 
     template<typename R, typename ... arglist>
-    class RecordedMethodBody : public MethodInvocationHandler<R, arglist...>, public ActualInvocationsSource, public ActualInvocationsContainer {
+    class RecordedMethodBody : public MethodInvocationHandler<R, arglist...> {
 
         struct MatchedInvocationHandler : ActualInvocationHandler<R, arglist...> {
 
@@ -7157,20 +7212,16 @@ namespace fakeit {
 
             virtual R handleMethodInvocation(ArgumentsTuple<arglist...> & args) override
             {
-                Destructible &destructable = *_invocationHandler;
-                ActualInvocationHandler<R, arglist...> &invocationHandler = dynamic_cast<ActualInvocationHandler<R, arglist...> &>(destructable);
-                return invocationHandler.handleMethodInvocation(args);
+                return _invocationHandler->handleMethodInvocation(args);
             }
 
             typename ActualInvocation<arglist...>::Matcher &getMatcher() const {
-                Destructible &destructable = *_matcher;
-                typename ActualInvocation<arglist...>::Matcher &matcher = dynamic_cast<typename ActualInvocation<arglist...>::Matcher &>(destructable);
-                return matcher;
+                return *_matcher;
             }
 
         private:
-            std::shared_ptr<Destructible> _matcher;
-            std::shared_ptr<Destructible> _invocationHandler;
+            std::shared_ptr<typename ActualInvocation<arglist...>::Matcher> _matcher;
+            std::shared_ptr<ActualInvocationHandler<R, arglist...>> _invocationHandler;
         };
 
 
@@ -7199,12 +7250,12 @@ namespace fakeit {
         }
 
         MatchedInvocationHandler &asMatchedInvocationHandler(Destructible &destructable) {
-            MatchedInvocationHandler &im = dynamic_cast<MatchedInvocationHandler &>(destructable);
+            MatchedInvocationHandler &im = static_cast<MatchedInvocationHandler &>(destructable);
             return im;
         }
 
         ActualInvocation<arglist...> &asActualInvocation(Destructible &destructable) const {
-            ActualInvocation<arglist...> &invocation = dynamic_cast<ActualInvocation<arglist...> &>(destructable);
+            ActualInvocation<arglist...> &invocation = static_cast<ActualInvocation<arglist...> &>(destructable);
             return invocation;
         }
 
@@ -7988,7 +8039,7 @@ namespace fakeit {
         {
             std::shared_ptr<Destructible> destructablePtr = _recordedActions.front();
             Destructible &destructable = *destructablePtr;
-            Action<R, arglist...> &action = dynamic_cast<Action<R, arglist...> &>(destructable);
+            Action<R, arglist...> &action = static_cast<Action<R, arglist...> &>(destructable);
             std::function<void()> finallyClause = [&]() -> void {
                 if (action.isDone())
                 {
@@ -8252,7 +8303,7 @@ namespace fakeit {
                     return false;
                 }
 
-                ActualInvocation<arglist...> &actualInvocation = dynamic_cast<ActualInvocation<arglist...> &>(invocation);
+                ActualInvocation<arglist...> &actualInvocation = static_cast<ActualInvocation<arglist...> &>(invocation);
                 return _invocationMatcher->matches(actualInvocation);
             }
 
@@ -8824,7 +8875,7 @@ namespace fakeit {
                 proxy.template stubMethod<id>(vMethod, createRecordedMethodBody < R, arglist... > (*this, vMethod));
             }
             Destructible *d = proxy.getMethodMock(vMethod);
-            RecordedMethodBody<R, arglist...> *methodMock = dynamic_cast<RecordedMethodBody<R, arglist...> *>(d);
+            RecordedMethodBody<R, arglist...> *methodMock = static_cast<RecordedMethodBody<R, arglist...> *>(d);
             return *methodMock;
         }
 
@@ -8833,14 +8884,14 @@ namespace fakeit {
                 proxy.stubDtor(createRecordedDtorBody(*this));
             }
             Destructible *d = proxy.getDtorMock();
-            RecordedMethodBody<void> *dtorMock = dynamic_cast<RecordedMethodBody<void> *>(d);
+            RecordedMethodBody<void> *dtorMock = static_cast<RecordedMethodBody<void> *>(d);
             return *dtorMock;
         }
 
         template<typename R, typename ... arglist>
         static RecordedMethodBody<R, arglist...> *createRecordedMethodBody(MockObject<C> &mock,
                                                                            R(C::*vMethod)(arglist...)) {
-            return new RecordedMethodBody<R, arglist...>(mock.getFakeIt(), typeid(vMethod).name());
+            return new RecordedMethodBody<R, arglist...>(mock.getFakeIt(), type_name<decltype(vMethod)>());
         }
 
         static RecordedMethodBody<void> *createRecordedDtorBody(MockObject<C> &mock) {
