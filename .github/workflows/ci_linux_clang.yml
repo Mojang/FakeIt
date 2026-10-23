@@ -21,3 +21,15 @@ jobs:
         run: |
           cd build
           ./fakeit_tests.exe
+  clang-ubuntu-22-04-no-rtti:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build project
+        run: |
+          cd build
+          make -f clang_makefile all CXXFLAGS=-fno-rtti
+      - name: Run tests
+        run: |
+          cd build
+          ./fakeit_tests.exe

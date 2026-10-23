@@ -35,14 +35,14 @@ fakeit_test_application_with_coverage: $(subst .cpp,_with_coverage,$(CPP_SRCS))
 %.o: ../tests/%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	$(CXX) -flto -D__GXX_EXPERIMENTAL_CXX0X__ -I"../include" -I"../config/standalone" -O0 -g3 -Wall -Wextra -Wno-ignored-qualifiers -c -fmessage-length=0 -std=c++11 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	$(CXX) -flto -D__GXX_EXPERIMENTAL_CXX0X__ -I"../include" -I"../config/standalone" -O0 -g3 -Wall -Wextra -Wno-ignored-qualifiers -c -fmessage-length=0 -std=c++11 $(CXXFLAGS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
 %_with_coverage: ../tests/%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	$(CXX) --coverage -D__GXX_EXPERIMENTAL_CXX0X__ -I"../include" -I"../config/standalone" -O0 -g3 -Wall -Wextra -Wno-ignored-qualifiers -c -fmessage-length=0 -std=c++11 -MMD -MP -MF"$(@:%_with_coverage=%.d)" -MT"$(@:%_with_coverage=%.d)" -o $(subst _with_coverage,.o,"$@") "$<"
+	$(CXX) --coverage -D__GXX_EXPERIMENTAL_CXX0X__ -I"../include" -I"../config/standalone" -O0 -g3 -Wall -Wextra -Wno-ignored-qualifiers -c -fmessage-length=0 -std=c++11 $(CXXFLAGS) -MMD -MP -MF"$(@:%_with_coverage=%.d)" -MT"$(@:%_with_coverage=%.d)" -o $(subst _with_coverage,.o,"$@") "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

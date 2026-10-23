@@ -11,6 +11,8 @@
 #include "tpunit++.hpp"
 #include "fakeit.hpp"
 
+#if FAKEIT_HAS_RTTI
+
 using namespace fakeit;
 
 struct TypeInfoTests : tpunit::TestFixture {
@@ -117,3 +119,5 @@ struct TypeInfoTests : tpunit::TestFixture {
 	}
 
 } __TypeInfoTests;
+
+#endif

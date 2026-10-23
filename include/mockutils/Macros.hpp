@@ -14,3 +14,10 @@
 #define FAKEIT_THROWS throw(...)
 #define FAKEIT_NO_THROWS
 #endif
+
+// Not __cpp_rtti: clang-cl defines it even with /GR-, which emits no RTTI data.
+#if defined (__GXX_RTTI) || defined (_CPPRTTI)
+#define FAKEIT_HAS_RTTI 1
+#else
+#define FAKEIT_HAS_RTTI 0
+#endif

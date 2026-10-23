@@ -7,10 +7,13 @@
  */
 #pragma once
 
+#include "mockutils/Macros.hpp"
+
 namespace fakeit {
 
     typedef unsigned long dword_;
 
+#if FAKEIT_HAS_RTTI
     struct TypeDescriptor {
         TypeDescriptor() :
                 ptrToVTable(0), spare(0) {
@@ -133,6 +136,7 @@ namespace fakeit {
 		struct RTTIClassHierarchyDescriptor<C, baseclasses...> *pClassDescriptor; //describes inheritance hierarchy
 #endif
 	};
+#endif
 
 
     struct VirtualTableBase {
@@ -208,8 +212,10 @@ namespace fakeit {
 
         void dispose() {
             _firstMethod--; // skip objectLocator
+#if FAKEIT_HAS_RTTI
             RTTICompleteObjectLocator<C, baseclasses...> *locator = (RTTICompleteObjectLocator<C, baseclasses...> *) _firstMethod[0];
             delete locator;
+#endif
             _firstMethod -= numOfCookies; // skip cookies
             delete[] _firstMethod;
         }
@@ -266,10 +272,10 @@ namespace fakeit {
         static void **buildVTArray() {
             auto vtSize = VTUtils::getVTSize<C>();
             auto array = new void *[vtSize + numOfCookies + 1]{};
-            RTTICompleteObjectLocator<C, baseclasses...> *objectLocator = new RTTICompleteObjectLocator<C, baseclasses...>(
-                    typeid(C));
             array += numOfCookies; // skip cookies
-            array[0] = objectLocator; // initialize RTTICompleteObjectLocator pointer
+#if FAKEIT_HAS_RTTI
+            array[0] = new RTTICompleteObjectLocator<C, baseclasses...>(typeid(C)); // initialize RTTICompleteObjectLocator pointer
+#endif
             array++; // skip object locator
             return array;
         }
